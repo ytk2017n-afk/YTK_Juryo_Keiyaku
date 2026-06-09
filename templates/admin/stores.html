@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}店舗マスタ管理{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0"><i class="bi bi-building-fill-gear me-2"></i>店舗マスタ管理</h2>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStoreModal">
+    <i class="bi bi-plus-circle me-1"></i>店舗を追加
+  </button>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>ログインID</th><th>店舗名</th><th>住所</th><th>連絡先</th>
+          <th>インボイス番号</th><th>状態</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in stores %}
+        <tr>
+          <td><code>{{ s.login_id }}</code></td>
+          <td class="fw-semibold">{{ s.store_name }}</td>
+          <td class="text-muted small">{{ s.store_address or "―" }}</td>
+          <td class="text-muted small">{{ s.store_contact or "―" }}</td>
+          <td class="text-muted small">{% if s.invoice_no %}T{{ s.invoice_no }}{% else %}―{% endif %}</td>
+          <td>
+            {% if s.is_active %}
+            <span class="badge bg-success">有効</span>
+            {% else %}
+            <span class="badge bg-secondary">無効</span>
+            {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-secondary"
+                    onclick="openEdit({{ s.id }}, '{{ s.store_name }}', '{{ s.store_address or '' }}', '{{ s.store_contact or '' }}', '{{ s.invoice_no or '' }}', {{ 'true' if s.is_active else 'false' }})">
+              <i class="bi bi-pencil"></i> 編集
+            </button>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">店舗が登録されていません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 追加モーダル -->
+<div class="modal fade" id="addStoreModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>店舗を追加</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/admin/stores/create">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ログインID <span class="text-danger">*</span></label>
+            <input type="text" name="login_id" class="form-control" placeholder="例: store01" required>
+            <div class="form-text">女の子がiPadでログインするIDです</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">初期パスワード <span class="text-danger">*</span></label>
+            <input type="text" name="password" class="form-control" placeholder="初期パスワード" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">店舗名（発行者名） <span class="text-danger">*</span></label>
+            <input type="text" name="store_name" class="form-control" placeholder="例: ○○クラブ" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">住所</label>
+            <input type="text" name="store_address" class="form-control" placeholder="〒000-0000 東京都…">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">連絡先（電話番号等）</label>
+            <input type="text" name="store_contact" class="form-control" placeholder="03-0000-0000">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">インボイス登録番号</label>
+            <div class="input-group">
+              <span class="input-group-text">T</span>
+              <input type="text" name="invoice_no" class="form-control" placeholder="13桁の番号" inputmode="numeric">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="submit" class="btn btn-primary">登録する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal fade" id="editStoreModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-secondary text-white">
+        <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>店舗を編集</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" id="editForm" action="">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">店舗名 <span class="text-danger">*</span></label>
+            <input type="text" name="store_name" id="edit_store_name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">住所</label>
+            <input type="text" name="store_address" id="edit_store_address" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">連絡先</label>
+            <input type="text" name="store_contact" id="edit_store_contact" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">インボイス登録番号</label>
+            <div class="input-group">
+              <span class="input-group-text">T</span>
+              <input type="text" name="invoice_no" id="edit_invoice_no" class="form-control" inputmode="numeric">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">新しいパスワード（変更する場合のみ）</label>
+            <input type="text" name="new_password" class="form-control" placeholder="空欄のままなら変更しません">
+          </div>
+          <div class="form-check">
+            <input type="checkbox" name="is_active" id="edit_is_active" class="form-check-input" value="on">
+            <label class="form-check-label" for="edit_is_active">有効（チェックを外すと無効）</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="submit" class="btn btn-primary">保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openEdit(id, name, address, contact, invoice, isActive) {
+  document.getElementById('editForm').action = `/admin/stores/${id}/update`;
+  document.getElementById('edit_store_name').value    = name;
+  document.getElementById('edit_store_address').value = address;
+  document.getElementById('edit_store_contact').value = contact;
+  document.getElementById('edit_invoice_no').value    = invoice;
+  document.getElementById('edit_is_active').checked   = isActive;
+  new bootstrap.Modal(document.getElementById('editStoreModal')).show();
+}
+</script>
+{% endblock %}
