@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}受領書一覧{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="fw-bold mb-0"><i class="bi bi-list-ul me-2"></i>受領書一覧</h2>
+  <div class="d-flex gap-2">
+    <a href="/admin/receipts/export-csv{% if sel_store %}?store_id={{ sel_store }}{% endif %}"
+       class="btn btn-sm btn-outline-success">
+      <i class="bi bi-download me-1"></i>CSV出力
+    </a>
+    <a href="/admin/receipts/download-zip{% if sel_store %}?store_id={{ sel_store }}{% endif %}"
+       class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-file-zip me-1"></i>ZIP
+    </a>
+  </div>
+</div>
+
+<!-- 検索フォーム -->
+<form method="get" class="card shadow-sm mb-3">
+  <div class="card-body py-2">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <input type="text" name="q" class="form-control form-control-sm"
+               placeholder="宛名・源氏名・本名で検索" value="{{ q }}">
+      </div>
+      <div class="col-md-3">
+        <select name="store_id" class="form-select form-select-sm">
+          <option value="0">全店舗</option>
+          {% for s in stores %}
+          <option value="{{ s.id }}" {% if sel_store == s.id %}selected{% endif %}>{{ s.store_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-primary">
+          <i class="bi bi-search"></i> 検索
+        </button>
+        <a href="/admin/receipts" class="btn btn-sm btn-outline-secondary ms-1">クリア</a>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="text-muted small mb-2">{{ total }} 件</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>店舗</th><th>宛名</th><th>源氏名</th><th>本名</th>
+          <th>合計金額</th><th>提出日時</th><th>PDF</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in receipts %}
+        <tr>
+          <td class="text-muted">{{ r.id }}</td>
+          <td><span class="badge bg-primary-subtle text-primary">{{ r.store.store_name if r.store else "―" }}</span></td>
+          <td>{{ r.shop_name or "―" }} 様</td>
+          <td>{{ r.name_alias or "―" }}</td>
+          <td>{{ r.name_real or "―" }}</td>
+          <td class="fw-semibold">{% if r.total_amount %}¥ {{ r.total_amount }}{% else %}―{% endif %}</td>
+          <td class="text-muted">{{ r.submitted_at.strftime("%Y/%m/%d %H:%M") if r.submitted_at else "―" }}</td>
+          <td>
+            {% if r.pdf_filename %}
+            <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-xs btn-outline-primary">
+              <i class="bi bi-file-pdf-fill"></i>
+            </a>
+            {% else %}
+            <span class="text-muted">―</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">受領書がありません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ページネーション -->
+{% if pages > 1 %}
+<nav class="mt-3">
+  <ul class="pagination pagination-sm justify-content-center mb-0">
+    {% for p in range(1, pages+1) %}
+    <li class="page-item {% if p == page %}active{% endif %}">
+      <a class="page-link" href="?q={{ q }}&store_id={{ sel_store }}&page={{ p }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

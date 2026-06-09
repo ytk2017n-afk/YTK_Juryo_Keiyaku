@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}契約書提出完了{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <div class="complete-icon mb-4">
+    <i class="bi bi-check-circle-fill" style="font-size:4rem;color:#37474F"></i>
+  </div>
+  <h2 class="fw-bold mb-2">契約書を提出しました</h2>
+  <p class="text-muted mb-4">業務委託契約書 #{{ contract.id }} が正常に送信されました</p>
+
+  <div class="card mx-auto mb-4" style="max-width:420px;border-color:#CFD8DC">
+    <div class="card-header" style="background:#37474F;color:#fff;font-weight:600;font-size:0.9rem">
+      <i class="bi bi-file-earmark-text me-2"></i>業務委託契約書
+    </div>
+    <div class="card-body text-start">
+      <div class="row g-2 small">
+        <div class="col-5 text-muted">店舗名（甲）</div>
+        <div class="col-7 fw-semibold">{{ store.store_name }}</div>
+        <div class="col-5 text-muted">提出日時</div>
+        <div class="col-7">{{ contract.submitted_at.strftime("%Y年%m月%d日 %H:%M") if contract.submitted_at else "―" }}</div>
+        <div class="col-5 text-muted">書類番号</div>
+        <div class="col-7">#{{ contract.id }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-3 justify-content-center flex-wrap">
+    <a href="{{ pdf_url }}" target="_blank" class="btn btn-lg" style="background:#37474F;color:#fff;border-radius:50px">
+      <i class="bi bi-file-pdf-fill me-2"></i>PDFを開く
+    </a>
+    <a href="/contract" class="btn btn-outline-secondary btn-lg" style="border-radius:50px">
+      <i class="bi bi-plus-circle-fill me-2"></i>新しく作成
+    </a>
+    <a href="/receipt" class="btn btn-outline-primary btn-lg" style="border-radius:50px">
+      <i class="bi bi-receipt me-2"></i>受領書を作成
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}管理ダッシュボード{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2"></i>ダッシュボード</h2>
+  <span class="text-muted small">YTK 管理画面</span>
+</div>
+
+<!-- サマリーカード -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-center border-0 shadow-sm">
+      <div class="card-body">
+        <div class="fs-1 fw-bold text-primary">{{ total_receipts }}</div>
+        <div class="text-muted small">総受領書数</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-center border-0 shadow-sm">
+      <div class="card-body">
+        <div class="fs-1 fw-bold text-success">{{ total_stores }}</div>
+        <div class="text-muted small">登録店舗数</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- クイックアクション -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <a href="/admin/receipts/export-csv" class="btn btn-outline-success w-100 py-3">
+      <i class="bi bi-file-earmark-spreadsheet-fill fs-4 d-block mb-1"></i>
+      CSV / Excel 出力
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="/admin/receipts/download-zip" class="btn btn-outline-primary w-100 py-3">
+      <i class="bi bi-file-zip-fill fs-4 d-block mb-1"></i>
+      PDF 一括ダウンロード
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="/admin/stores" class="btn btn-outline-secondary w-100 py-3">
+      <i class="bi bi-building-fill-gear fs-4 d-block mb-1"></i>
+      店舗マスタ管理
+    </a>
+  </div>
+</div>
+
+<!-- 最新受領書 -->
+<div class="card shadow-sm">
+  <div class="card-header fw-semibold bg-white">
+    <i class="bi bi-clock-history me-2"></i>最新の受領書
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>店舗</th><th>宛名</th><th>源氏名</th>
+          <th>合計金額</th><th>提出日時</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recent %}
+        <tr>
+          <td class="text-muted small">{{ r.id }}</td>
+          <td><span class="badge bg-primary-subtle text-primary">{{ r.store.store_name if r.store else "―" }}</span></td>
+          <td>{{ r.shop_name or "―" }} 様</td>
+          <td>{{ r.name_alias or "―" }}</td>
+          <td class="fw-semibold">{% if r.total_amount %}¥ {{ r.total_amount }}{% else %}―{% endif %}</td>
+          <td class="text-muted small">{{ r.submitted_at.strftime("%m/%d %H:%M") if r.submitted_at else "―" }}</td>
+          <td>
+            {% if r.pdf_filename %}
+            <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-file-pdf"></i>
+            </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">受領書がまだありません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer text-end bg-white">
+    <a href="/admin/receipts" class="btn btn-sm btn-outline-primary">すべて見る <i class="bi bi-arrow-right"></i></a>
+  </div>
+</div>
+{% endblock %}

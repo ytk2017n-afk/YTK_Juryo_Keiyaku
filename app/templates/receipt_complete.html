@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}提出完了{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+  <div class="complete-icon mb-4">
+    <i class="bi bi-check-circle-fill text-success" style="font-size:4rem"></i>
+  </div>
+  <h2 class="fw-bold mb-2">受領書を提出しました</h2>
+  <p class="text-muted mb-4">受領書 #{{ receipt.id }} が正常に送信されました</p>
+
+  <div class="card mx-auto mb-4" style="max-width:420px">
+    <div class="card-body text-start">
+      <div class="row g-2 small">
+        <div class="col-5 text-muted">宛名</div>
+        <div class="col-7 fw-semibold">{{ receipt.shop_name or "―" }} 様</div>
+        <div class="col-5 text-muted">源氏名</div>
+        <div class="col-7">{{ receipt.name_alias or "―" }}</div>
+        <div class="col-5 text-muted">日付</div>
+        <div class="col-7">{{ receipt.receipt_date or "―" }}</div>
+        <div class="col-5 text-muted">合計金額</div>
+        <div class="col-7 fw-bold text-primary">¥ {{ receipt.total_amount or "―" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-3 justify-content-center flex-wrap">
+    <a href="{{ pdf_url }}" target="_blank" class="btn btn-outline-primary btn-lg">
+      <i class="bi bi-file-pdf-fill me-2"></i>PDFを開く
+    </a>
+    <a href="/receipt" class="btn btn-primary btn-lg">
+      <i class="bi bi-plus-circle-fill me-2"></i>新しく作成
+    </a>
+  </div>
+</div>
+{% endblock %}
