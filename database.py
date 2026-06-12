@@ -3,10 +3,17 @@ from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime, timezone
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH  = os.path.join(BASE_DIR, "data", "receipts.db")
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine       = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+if DATABASE_URL:
+    # PostgreSQL (Supabase) — replace postgres:// with postgresql:// for SQLAlchemy
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    engine = create_engine(DATABASE_URL)
+else:
+    DB_PATH = os.path.join(BASE_DIR, "data", "receipts.db")
+    engine  = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base         = declarative_base()
 
@@ -93,5 +100,6 @@ def get_db():
 
 
 def init_db():
-    os.makedirs(os.path.join(BASE_DIR, "data", "pdfs"), exist_ok=True)
+    if not DATABASE_URL:
+        os.makedirs(os.path.join(BASE_DIR, "data", "pdfs"), exist_ok=True)
     Base.metadata.create_all(bind=engine)
