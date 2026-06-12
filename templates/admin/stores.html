@@ -41,7 +41,8 @@
                     data-address="{{ s.store_address | e }}"
                     data-contact="{{ s.store_contact | e }}"
                     data-invoice="{{ s.invoice_no | e }}"
-                    data-active="{{ 'true' if s.is_active else 'false' }}">
+                    data-active="{{ 'true' if s.is_active else 'false' }}"
+                    data-password="{{ s.plain_password | e }}">
               <i class="bi bi-pencil"></i> 編集
             </button>
             <form method="post" action="/admin/stores/{{ s.id }}/delete" onsubmit="return confirm('「{{ s.store_name }}」を削除しますか？この操作は取り消せません。')">
@@ -137,6 +138,17 @@
             </div>
           </div>
           <div class="mb-3">
+            <label class="form-label fw-semibold">現在のパスワード</label>
+            <div class="input-group">
+              <input type="text" id="edit_current_password" class="form-control bg-light" readonly>
+              <button class="btn btn-outline-secondary" type="button"
+                      onclick="navigator.clipboard.writeText(document.getElementById('edit_current_password').value)"
+                      title="コピー">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+          <div class="mb-3">
             <label class="form-label fw-semibold">新しいパスワード（変更する場合のみ）</label>
             <input type="text" name="new_password" class="form-control" placeholder="空欄のままなら変更しません">
           </div>
@@ -163,7 +175,8 @@ document.querySelectorAll('.btn-edit').forEach(btn => {
     document.getElementById('edit_store_address').value = d.address;
     document.getElementById('edit_store_contact').value = d.contact;
     document.getElementById('edit_invoice_no').value    = d.invoice;
-    document.getElementById('edit_is_active').checked   = d.active === 'true';
+    document.getElementById('edit_is_active').checked        = d.active === 'true';
+    document.getElementById('edit_current_password').value   = d.password || '―';
     new bootstrap.Modal(document.getElementById('editStoreModal')).show();
   });
 });
