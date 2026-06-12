@@ -42,7 +42,8 @@
                     data-contact="{{ s.store_contact | e }}"
                     data-invoice="{{ s.invoice_no | e }}"
                     data-active="{{ 'true' if s.is_active else 'false' }}"
-                    data-password="{{ s.plain_password | e }}">
+                    data-password="{{ s.plain_password | e }}"
+                    data-login-id="{{ s.login_id | e }}">
               <i class="bi bi-pencil"></i> 編集
             </button>
             <form method="post" action="/admin/stores/{{ s.id }}/delete" onsubmit="return confirm('「{{ s.store_name }}」を削除しますか？この操作は取り消せません。')">
@@ -119,6 +120,10 @@
       <form method="post" id="editForm" action="">
         <div class="modal-body">
           <div class="mb-3">
+            <label class="form-label fw-semibold">ログインID <span class="text-danger">*</span></label>
+            <input type="text" name="login_id" id="edit_login_id" class="form-control" required>
+          </div>
+          <div class="mb-3">
             <label class="form-label fw-semibold">店舗名 <span class="text-danger">*</span></label>
             <input type="text" name="store_name" id="edit_store_name" class="form-control" required>
           </div>
@@ -171,6 +176,7 @@ document.querySelectorAll('.btn-edit').forEach(btn => {
   btn.addEventListener('click', function() {
     const d = this.dataset;
     document.getElementById('editForm').action = `/admin/stores/${d.id}/update`;
+    document.getElementById('edit_login_id').value      = d.loginId;
     document.getElementById('edit_store_name').value    = d.name;
     document.getElementById('edit_store_address').value = d.address;
     document.getElementById('edit_store_contact').value = d.contact;

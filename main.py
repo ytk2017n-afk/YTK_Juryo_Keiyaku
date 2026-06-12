@@ -348,6 +348,7 @@ async def delete_store(
 @app.post("/admin/stores/{store_id}/update")
 async def update_store(
     store_id: int,
+    login_id:      str = Form(...),
     store_name:    str = Form(...),
     store_address: str = Form(""),
     store_contact: str = Form(""),
@@ -360,6 +361,11 @@ async def update_store(
     target = db.query(Store).filter(Store.id == store_id).first()
     if not target:
         raise HTTPException(404)
+    # login_id変更時の重複チェック
+    if login_id != target.login_id:
+        if db.query(Store).filter(Store.login_id == login_id).first():
+            raise HTTPException(400, "そのログインIDは既に使われています")
+        target.login_id = login_id
     target.store_name    = store_name
     target.store_address = store_address
     target.store_contact = store_contact
