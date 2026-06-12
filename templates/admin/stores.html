@@ -34,8 +34,13 @@
             {% endif %}
           </td>
           <td class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-secondary"
-                    onclick="openEdit({{ s.id }}, '{{ s.store_name }}', '{{ s.store_address or '' }}', '{{ s.store_contact or '' }}', '{{ s.invoice_no or '' }}', {{ 'true' if s.is_active else 'false' }})">
+            <button class="btn btn-sm btn-outline-secondary btn-edit"
+                    data-id="{{ s.id }}"
+                    data-name="{{ s.store_name | e }}"
+                    data-address="{{ s.store_address | e }}"
+                    data-contact="{{ s.store_contact | e }}"
+                    data-invoice="{{ s.invoice_no | e }}"
+                    data-active="{{ 'true' if s.is_active else 'false' }}">
               <i class="bi bi-pencil"></i> 編集
             </button>
             <form method="post" action="/admin/stores/{{ s.id }}/delete" onsubmit="return confirm('「{{ s.store_name }}」を削除しますか？この操作は取り消せません。')">
@@ -149,14 +154,17 @@
 </div>
 
 <script>
-function openEdit(id, name, address, contact, invoice, isActive) {
-  document.getElementById('editForm').action = `/admin/stores/${id}/update`;
-  document.getElementById('edit_store_name').value    = name;
-  document.getElementById('edit_store_address').value = address;
-  document.getElementById('edit_store_contact').value = contact;
-  document.getElementById('edit_invoice_no').value    = invoice;
-  document.getElementById('edit_is_active').checked   = isActive;
-  new bootstrap.Modal(document.getElementById('editStoreModal')).show();
-}
+document.querySelectorAll('.btn-edit').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const d = this.dataset;
+    document.getElementById('editForm').action = `/admin/stores/${d.id}/update`;
+    document.getElementById('edit_store_name').value    = d.name;
+    document.getElementById('edit_store_address').value = d.address;
+    document.getElementById('edit_store_contact').value = d.contact;
+    document.getElementById('edit_invoice_no').value    = d.invoice;
+    document.getElementById('edit_is_active').checked   = d.active === 'true';
+    new bootstrap.Modal(document.getElementById('editStoreModal')).show();
+  });
+});
 </script>
 {% endblock %}
