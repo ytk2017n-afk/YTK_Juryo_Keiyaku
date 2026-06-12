@@ -19,7 +19,8 @@ from contract_pdf_generator import generate_contract_pdf
 init_db()
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-PDF_DIR    = os.getenv("PDF_DIR", os.path.join(BASE_DIR, "data", "pdfs"))
+_default_pdf_dir = "/tmp/pdfs" if os.getenv("VERCEL") else os.path.join(BASE_DIR, "data", "pdfs")
+PDF_DIR    = os.getenv("PDF_DIR", _default_pdf_dir)
 os.makedirs(PDF_DIR, exist_ok=True)
 SECRET_KEY = os.getenv("SECRET_KEY", "ytk-receipt-secret-change-in-prod-2024")
 
