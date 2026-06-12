@@ -320,12 +320,13 @@ async def create_store(
     if db.query(Store).filter(Store.login_id == login_id).first():
         raise HTTPException(400, "そのログインIDは既に使われています")
     new_store = Store(
-        login_id      = login_id,
-        password_hash = pwd_ctx.hash(password),
-        store_name    = store_name,
-        store_address = store_address,
-        store_contact = store_contact,
-        invoice_no    = invoice_no,
+        login_id       = login_id,
+        password_hash  = pwd_ctx.hash(password),
+        plain_password = password,
+        store_name     = store_name,
+        store_address  = store_address,
+        store_contact  = store_contact,
+        invoice_no     = invoice_no,
     )
     db.add(new_store)
     db.commit()
@@ -365,7 +366,8 @@ async def update_store(
     target.invoice_no    = invoice_no
     target.is_active     = (is_active == "on")
     if new_password:
-        target.password_hash = pwd_ctx.hash(new_password)
+        target.password_hash  = pwd_ctx.hash(new_password)
+        target.plain_password = new_password
     db.commit()
     return RedirectResponse("/admin/stores", status_code=303)
 

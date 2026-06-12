@@ -28,6 +28,7 @@ class Store(Base):
     store_address = Column(String(256), nullable=True)        # 発行者：住所
     store_contact = Column(String(128), nullable=True)        # 発行者：連絡先
     invoice_no    = Column(String(20),  nullable=True)        # 発行者：インボイス登録番号
+    plain_password = Column(String(256), nullable=True)
     is_admin      = Column(Boolean, default=False)
     is_active     = Column(Boolean, default=True)
     created_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc))

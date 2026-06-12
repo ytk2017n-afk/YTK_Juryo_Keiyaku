@@ -14,7 +14,7 @@
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th>ログインID</th><th>店舗名</th><th>住所</th><th>連絡先</th>
+          <th>ログインID</th><th>パスワード</th><th>店舗名</th><th>住所</th><th>連絡先</th>
           <th>インボイス番号</th><th>状態</th><th></th>
         </tr>
       </thead>
@@ -22,6 +22,7 @@
         {% for s in stores %}
         <tr>
           <td><code>{{ s.login_id }}</code></td>
+          <td><code>{{ s.plain_password or "―" }}</code></td>
           <td class="fw-semibold">{{ s.store_name }}</td>
           <td class="text-muted small">{{ s.store_address or "―" }}</td>
           <td class="text-muted small">{{ s.store_contact or "―" }}</td>
