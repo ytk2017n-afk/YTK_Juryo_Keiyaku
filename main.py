@@ -331,6 +331,19 @@ async def create_store(
     db.commit()
     return RedirectResponse("/admin/stores", status_code=303)
 
+@app.post("/admin/stores/{store_id}/delete")
+async def delete_store(
+    store_id: int,
+    store: Store = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    target = db.query(Store).filter(Store.id == store_id, Store.is_admin == False).first()
+    if not target:
+        raise HTTPException(404)
+    db.delete(target)
+    db.commit()
+    return RedirectResponse("/admin/stores", status_code=303)
+
 @app.post("/admin/stores/{store_id}/update")
 async def update_store(
     store_id: int,
