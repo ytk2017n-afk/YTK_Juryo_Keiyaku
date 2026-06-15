@@ -133,7 +133,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     cur = TY
 
     # ── 宛名（大きめ） ──────────────────────────────────────────────────────────
-    AH = 56; ALW = 60; SAMA_W = 28
+    AH = 44; ALW = 60; SAMA_W = 28
     cur -= AH
     fr(MX,             cur, ALW,          AH, C_HDR, black, 1.5)
     t(MX+ALW/2,        cur+AH/2-7, "宛　名", FB, 11, white, "center")
@@ -142,11 +142,10 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     fr(MX+CW-SAMA_W,   cur, SAMA_W, AH, C_INP, black, 1.5)
     t(MX+CW-SAMA_W/2,  cur+AH/2-8, "様", FB, 13, black, "center")
 
-    SH = 15   # セクション見出し高さ
-    G  = 0    # セクション間ギャップ（詰める）
+    SH = 12   # セクション見出し高さ
 
     # ── 基本情報 ────────────────────────────────────────────────────────────────
-    RH = 46   # 通常行高
+    RH = 40   # 通常行高
     cur = sec(MX, cur-SH, CW, SH, "■ 基本情報")
     cur -= RH; row(MX, cur, CW, RH, "日　　付",     "date")
     cur -= RH; row(MX, cur, CW, RH, "インボイス番号","invoice", prefix="T", prefix_w=16)
@@ -157,13 +156,13 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     cur -= RH; row(MX, cur, CW, RH, "源 氏 名", "alias")
     cur -= RH; row(MX, cur, CW, RH, "本　　名", "realname")
     cur -= RH; row(MX, cur, CW, RH, "住　　所", "addr1")
-    RA = 38   # 続き行
+    RA = 30   # 続き行
     cur -= RA; row(MX, cur, CW, RA, "（続き）", "addr2", lf=C_LBL_S, vf=C_INP_S, lf_fs=7)
 
     # ── 金額 ────────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 金額")
 
-    RLG = 52  # 金額大きい行
+    RLG = 44  # 金額大きい行
     cur -= RLG
     fr(MX,        cur, LBL_W, RLG, C_LBL, black, 1.2)
     t(MX+LBL_W/2, cur+RLG/2-6, "金　　額", FB, 10, black, "center")
@@ -175,7 +174,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     _draw_field_image(cv, fields.get("amount",""), vx, cur, vw, RLG)
 
     # 消費税率固定
-    RS = 34
+    RS = 28
     cur -= RS
     fr(MX,       cur, LBL_W, RS, C_GRAY, black, 0.5)
     t(MX+LBL_W/2,cur+RS/2-4, "消費税率", FR, 8, HexColor("#555555"), "center")
@@ -196,7 +195,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
 
     # ── 但し書 ──────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 但し書")
-    RD = 48
+    RD = 38
     cur -= RD; row(MX, cur, CW, RD, "但 し 書", "desc")
 
     # ── 発行者情報 ──────────────────────────────────────────────────────────────
@@ -210,7 +209,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     ]
     if data.get("store_invoice_no"):
         iss_rows.append(("インボイス", "T" + data["store_invoice_no"]))
-    IRH = 30
+    IRH = 24
     for label, val in iss_rows:
         cur -= IRH
         fr(MX,         cur, LBL_W, IRH, C_LBL_S, black, 0.5)
