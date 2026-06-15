@@ -19,10 +19,24 @@ from contract_pdf_generator import generate_contract_pdf
 init_db()
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-_default_pdf_dir = "/tmp/pdfs" if os.getenv("VERCEL") else os.path.join(BASE_DIR, "data", "pdfs")
-PDF_DIR    = os.getenv("PDF_DIR", _default_pdf_dir)
-os.makedirs(PDF_DIR, exist_ok=True)
 SECRET_KEY = os.getenv("SECRET_KEY", "ytk-receipt-secret-change-in-prod-2024")
+
+
+def _generate_pdf_bytes(generator_fn, data: dict) -> bytes:
+    """PDFをメモリ上で生成してバイト列で返す"""
+    tmp = io.BytesIO()
+    import tempfile, os as _os
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+        tmp_path = f.name
+    try:
+        generator_fn(data, tmp_path)
+        with open(tmp_path, "rb") as f:
+            return f.read()
+    finally:
+        try:
+            _os.remove(tmp_path)
+        except Exception:
+            pass
 
 app = FastAPI(title="受領書管理システム")
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
@@ -129,17 +143,17 @@ async def submit_handwriting(
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename  = f"receipt_{store.login_id}_{receipt.id}_{timestamp}.pdf"
-    pdf_path  = os.path.join(PDF_DIR, filename)
 
-    generate_receipt_pdf({
-        "fields":          fields,   # 手書き画像データ
+    pdf_bytes = _generate_pdf_bytes(generate_receipt_pdf, {
+        "fields":          fields,
         "store_name":      store.store_name,
         "store_address":   store.store_address or "",
         "store_contact":   store.store_contact or "",
         "store_invoice_no": store.invoice_no or "",
-    }, pdf_path)
+    })
 
     receipt.pdf_filename = filename
+    receipt.pdf_data     = pdf_bytes
     db.commit()
 
     return JSONResponse({"receipt_id": receipt.id, "pdf_url": f"/receipt/pdf/{receipt.id}"})
@@ -174,11 +188,13 @@ async def download_receipt_pdf(
     # 管理者 or 自店舗のみ
     if not store.is_admin and receipt.store_id != store.id:
         raise HTTPException(403)
-    path = os.path.join(PDF_DIR, receipt.pdf_filename)
-    if not os.path.exists(path):
-        raise HTTPException(404, "PDFファイルが見つかりません")
-    return FileResponse(path, media_type="application/pdf",
-                        filename=receipt.pdf_filename)
+    if not receipt.pdf_data:
+        raise HTTPException(404, "PDFデータが見つかりません")
+    return StreamingResponse(
+        io.BytesIO(receipt.pdf_data),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{receipt.pdf_filename}"'},
+    )
 
 # ── 管理者ダッシュボード ────────────────────────────────────────────────────────
 @app.get("/admin", response_class=HTMLResponse)
@@ -253,9 +269,8 @@ async def download_zip(
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for r in receipts:
-            path = os.path.join(PDF_DIR, r.pdf_filename)
-            if os.path.exists(path):
-                zf.write(path, r.pdf_filename)
+            if r.pdf_data:
+                zf.writestr(r.pdf_filename or f"receipt_{r.id}.pdf", r.pdf_data)
     buf.seek(0)
     fname = f"receipts_{datetime.now().strftime('%Y%m%d')}.zip"
     return StreamingResponse(buf, media_type="application/zip",
@@ -412,20 +427,16 @@ async def submit_contract(
     db.flush()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # 店舗別フォルダに格納
-    store_dir   = os.path.join(PDF_DIR, f"store_{store.id}")
-    os.makedirs(store_dir, exist_ok=True)
-    filename    = f"contract_{store.login_id}_{contract.id}_{timestamp}.pdf"
-    rel_path    = os.path.join(f"store_{store.id}", filename)
-    pdf_path    = os.path.join(PDF_DIR, rel_path)
+    filename  = f"contract_{store.login_id}_{contract.id}_{timestamp}.pdf"
 
-    generate_contract_pdf({
+    pdf_bytes = _generate_pdf_bytes(generate_contract_pdf, {
         "fields":        fields,
         "store_name":    store.store_name,
         "store_address": store.store_address or "",
-    }, pdf_path)
+    })
 
-    contract.pdf_filename = rel_path
+    contract.pdf_filename = filename
+    contract.pdf_data     = pdf_bytes
     db.commit()
 
     return JSONResponse({"contract_id": contract.id, "pdf_url": f"/contract/pdf/{contract.id}"})
@@ -462,11 +473,13 @@ async def download_contract_pdf(
         raise HTTPException(404, "契約書が見つかりません")
     if not store.is_admin and contract.store_id != store.id:
         raise HTTPException(403)
-    path = os.path.join(PDF_DIR, contract.pdf_filename)
-    if not os.path.exists(path):
-        raise HTTPException(404, "PDFファイルが見つかりません")
-    return FileResponse(path, media_type="application/pdf",
-                        filename=os.path.basename(contract.pdf_filename))
+    if not contract.pdf_data:
+        raise HTTPException(404, "PDFデータが見つかりません")
+    return StreamingResponse(
+        io.BytesIO(contract.pdf_data),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{os.path.basename(contract.pdf_filename)}"'},
+    )
 
 
 # ── 管理者：契約書一覧 ─────────────────────────────────────────────────────────
@@ -514,9 +527,9 @@ async def download_contracts_zip(
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for c in contracts:
-            path = os.path.join(PDF_DIR, c.pdf_filename)
-            if os.path.exists(path):
-                zf.write(path, os.path.basename(c.pdf_filename))
+            if c.pdf_data:
+                name = os.path.basename(c.pdf_filename) if c.pdf_filename else f"contract_{c.id}.pdf"
+                zf.writestr(name, c.pdf_data)
     buf.seek(0)
     fname = f"contracts_{datetime.now().strftime('%Y%m%d')}.zip"
     return StreamingResponse(buf, media_type="application/zip",

@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, ForeignKey, LargeBinary
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime, timezone
 import os
@@ -66,6 +66,7 @@ class Receipt(Base):
 
     # ── メタ
     pdf_filename  = Column(String(256), nullable=True)
+    pdf_data      = Column(LargeBinary, nullable=True)
     submitted_at  = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
     is_deleted    = Column(Boolean,     default=False)
 
@@ -86,6 +87,7 @@ class Contract(Base):
     oto_alias_b64    = Column(Text, nullable=True)   # 源氏名
 
     pdf_filename = Column(String(256), nullable=True)
+    pdf_data     = Column(LargeBinary, nullable=True)
     submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_deleted   = Column(Boolean, default=False)
 
