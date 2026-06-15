@@ -43,10 +43,16 @@
           <td>{{ r.name_alias or "―" }}</td>
           <td>{{ ("¥ " + r.total_amount) if r.total_amount else "―" }}</td>
           <td class="text-muted small">{{ r.submitted_at.strftime("%Y/%m/%d %H:%M") if r.submitted_at else "―" }}</td>
-          <td>
+          <td class="d-flex gap-1">
             <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
               <i class="bi bi-eye"></i> 閲覧
             </a>
+            <form method="post" action="/my-docs/receipts/{{ r.id }}/delete"
+                  onsubmit="return confirm('受領書 #{{ r.id }} を削除しますか？')">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> 削除
+              </button>
+            </form>
           </td>
         </tr>
         {% else %}
@@ -77,10 +83,16 @@
           <td>{{ c.date_text or "―" }}</td>
           <td>{{ c.oto_alias_text or "―" }}</td>
           <td class="text-muted small">{{ c.submitted_at.strftime("%Y/%m/%d %H:%M") if c.submitted_at else "―" }}</td>
-          <td>
+          <td class="d-flex gap-1">
             <a href="/contract/pdf/{{ c.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
               <i class="bi bi-eye"></i> 閲覧
             </a>
+            <form method="post" action="/my-docs/contracts/{{ c.id }}/delete"
+                  onsubmit="return confirm('契約書 #{{ c.id }} を削除しますか？')">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> 削除
+              </button>
+            </form>
           </td>
         </tr>
         {% else %}

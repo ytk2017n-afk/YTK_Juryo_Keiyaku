@@ -471,6 +471,32 @@ async def delete_contract(
     db.commit()
     return RedirectResponse(f"/admin/stores/{store_id}/docs?tab=contracts", status_code=303)
 
+@app.post("/my-docs/receipts/{receipt_id}/delete")
+async def my_delete_receipt(
+    receipt_id: int,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    r = db.query(Receipt).filter(Receipt.id == receipt_id, Receipt.store_id == store.id).first()
+    if not r:
+        raise HTTPException(404)
+    r.is_deleted = True
+    db.commit()
+    return RedirectResponse("/my-docs?tab=receipts", status_code=303)
+
+@app.post("/my-docs/contracts/{contract_id}/delete")
+async def my_delete_contract(
+    contract_id: int,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    c = db.query(Contract).filter(Contract.id == contract_id, Contract.store_id == store.id).first()
+    if not c:
+        raise HTTPException(404)
+    c.is_deleted = True
+    db.commit()
+    return RedirectResponse("/my-docs?tab=contracts", status_code=303)
+
 # ── 契約書フォーム（店舗スタッフ） ─────────────────────────────────────────────
 @app.get("/contract", response_class=HTMLResponse)
 async def contract_form(
