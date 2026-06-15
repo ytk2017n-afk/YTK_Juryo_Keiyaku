@@ -409,9 +409,9 @@ async def contract_form(
     store: Store = Depends(require_login),
 ):
     return templates.TemplateResponse("contract_form.html", {
-        "request": request,
-        "store":   store,
-        "today":   datetime.now().strftime("%Y年%m月%d日"),
+        "request":   request,
+        "store":     store,
+        "today_iso": datetime.now().strftime("%Y-%m-%d"),
     })
 
 
@@ -427,10 +427,10 @@ async def submit_contract(
     contract = Contract(
         store_id         = store.id,
         oto_preamble_b64 = fields.get("oto_preamble", ""),
-        date_b64         = fields.get("date", ""),
-        oto_addr_b64     = fields.get("oto_addr", ""),
         oto_realname_b64 = fields.get("oto_realname", ""),
-        oto_alias_b64    = fields.get("oto_alias", ""),
+        date_text        = fields.get("date", ""),
+        oto_addr_text    = fields.get("oto_addr", ""),
+        oto_alias_text   = fields.get("oto_alias", ""),
     )
     db.add(contract)
     db.flush()
@@ -440,6 +440,9 @@ async def submit_contract(
 
     pdf_bytes = _generate_pdf_bytes(generate_contract_pdf, {
         "fields":        fields,
+        "date_text":     fields.get("date", ""),
+        "oto_addr":      fields.get("oto_addr", ""),
+        "oto_alias":     fields.get("oto_alias", ""),
         "store_name":    store.store_name,
         "store_address": store.store_address or "",
     })

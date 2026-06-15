@@ -3,7 +3,6 @@
 
 {% block head %}
 <style>
-/* ── 契約書ドキュメントスタイル ────────────────────── */
 .contract-doc {
   max-width: 700px;
   margin: 0 auto 120px;
@@ -51,8 +50,25 @@
   display: flex; align-items: center;
   padding: 6px 12px;
   font-size: 0.88rem; color: #333;
-  border-right: none;
 }
+/* テキスト入力（乙） */
+.doc-input-wrap {
+  flex: 1;
+  background: #FFFDE7;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+.doc-text-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  color: #222;
+  outline: none;
+  padding: 4px 0;
+}
+.doc-text-input::placeholder { color: #bbb; }
 /* 手書きCanvas（乙） */
 .canvas-wrap {
   flex: 1;
@@ -78,8 +94,34 @@
 }
 .canvas-wrap:hover .clear-btn,
 .canvas-wrap:focus-within .clear-btn { opacity: 1; }
-
-/* 条文エリア */
+/* 日付ピッカー */
+.date-picker-bar {
+  max-width: 700px;
+  margin: 12px auto 8px;
+  background: #ECEFF1;
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #CFD8DC;
+}
+.date-picker-bar label {
+  font-weight: 700;
+  color: #37474F;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.date-picker-bar input[type=date] {
+  border: 1.5px solid #CFD8DC;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  color: #222;
+  background: #fff;
+  outline: none;
+}
+/* 条文 */
 .articles {
   padding: 14px 20px;
   background: #FAFAFA;
@@ -119,7 +161,6 @@
 .articles-toggle:hover { background: #E0E0E0; }
 .articles-toggle i { transition: transform .2s; }
 .articles-toggle.collapsed i { transform: rotate(-90deg); }
-
 /* 発行者 */
 .issuer-wrap { display: flex; border-bottom: 1px solid #E0E0E0; }
 .issuer-left { flex: 1; }
@@ -132,7 +173,6 @@
 .issuer-row-fixed:last-child { border-bottom: none; }
 .issuer-lbl { width: 72px; background: #ECEFF1; display: flex; align-items: center; justify-content: center; font-size: 0.76rem; font-weight: 600; color: #555; border-right: 1px solid #E0E0E0; text-align:center; }
 .issuer-val { flex: 1; display: flex; align-items: center; padding: 0 10px; font-size: 0.82rem; color: #333; }
-
 /* ペンツールバー */
 .pen-toolbar {
   max-width: 700px; margin: 0 auto;
@@ -148,7 +188,6 @@
 .pen-size-btn.active { border-color: #37474F; background: #ECEFF1; }
 .color-btn { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
 .color-btn.active { border-color: #37474F; box-shadow: 0 0 0 2px #fff inset; }
-
 /* 送信バー */
 .submit-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
@@ -169,8 +208,14 @@
 
 {% block content %}
 
+<!-- 日付ピッカー -->
+<div class="date-picker-bar sticky-top" style="top:56px;z-index:101">
+  <label for="contractDate"><i class="bi bi-calendar3 me-1"></i>契約日：</label>
+  <input type="date" id="contractDate" value="{{ today_iso }}">
+</div>
+
 <!-- ペン設定ツールバー -->
-<div class="pen-toolbar sticky-top" style="top:56px;z-index:100;margin-top:8px">
+<div class="pen-toolbar sticky-top" style="top:110px;z-index:100">
   <span class="small fw-semibold text-muted">太さ:</span>
   <button class="pen-size-btn active" style="width:22px;height:22px" onclick="setPenSize(2,this)">
     <span style="width:5px;height:5px;border-radius:50%;background:#333;display:block"></span>
@@ -188,10 +233,10 @@
   <button class="color-btn" style="background:#B71C1C" onclick="setPenColor('#B71C1C',this)" title="赤"></button>
   <div class="vr mx-1"></div>
   <button class="btn btn-sm btn-outline-danger py-1" onclick="clearAllFields()">
-    <i class="bi bi-eraser-fill"></i> 全消去
+    <i class="bi bi-eraser-fill"></i> 手書き消去
   </button>
   <span class="ms-auto small text-muted d-none d-sm-inline">
-    <span class="badge-oto me-1">乙</span>欄に Apple Pencil で手書き
+    <span class="badge-oto me-1">乙</span>手書き欄に Apple Pencil で記入
   </span>
 </div>
 
@@ -211,12 +256,12 @@
     <div class="auto-field">{{ store.store_address or "―" }}</div>
   </div>
 
-  <!-- 乙（手書き） -->
-  <div class="doc-sec" style="background:#F57F17;color:#fff"><i class="bi bi-pencil me-1"></i>乙（受託者） <span class="badge-oto ms-1">手書き入力</span></div>
+  <!-- 乙（入力） -->
+  <div class="doc-sec" style="background:#F57F17;color:#fff"><i class="bi bi-pencil me-1"></i>乙（受託者）</div>
 
-  <div class="doc-row">
-    <div class="doc-label">氏　　名</div>
-    <div class="canvas-wrap" style="min-height:56px">
+  <div class="doc-row" style="min-height:60px">
+    <div class="doc-label">氏　　名<br><span style="font-size:0.7rem;font-weight:400;color:#777">（手書き）</span></div>
+    <div class="canvas-wrap">
       <canvas id="c_oto_preamble"></canvas>
       <button class="clear-btn" onclick="clearField('c_oto_preamble')">✕</button>
     </div>
@@ -236,48 +281,37 @@
     <div class="articles">
       <div class="article-title">第１条（契約業務の内容）</div>
       <div class="article-body">甲、乙共に法令を厳守し、甲は乙に対し本契約における業務内容を詳細に説明し乙はこれを遵守すること。</div>
-
       <div class="article-title">第２条（契約期間）</div>
       <div class="article-item">１．本契約の有効期間は、契約締結の日から36ヶ月とする。</div>
       <div class="article-item">２．本契約には更新の定めはなく、契約期間満了後に改めて契約する場合は甲乙協議の上、再度契約を締結する。なお契約は書面契約、口頭契約を問わない。</div>
-
       <div class="article-title">第３条（業務委託の遂行方法）</div>
       <div class="article-item">１．委託業務の遂行にあたって、稼動日及び稼働時間は乙の裁量に属するものとし許諾の自由を有するものとする。</div>
       <div class="article-item">２．したがって勤務場所・時間についての指定・管理は行わないものとする。</div>
       <div class="article-item">３．業務の内容及び遂行方法に対する指揮監督は受けないものとする。</div>
       <div class="article-item">４．但し、業務遂行の必要性などから、事前の十分な打合せ等、関係者間で協議しつつ協力関係を保持することとする。</div>
-
       <div class="article-title">第４条（委託手数料）</div>
       <div class="article-item">１．甲が乙に対し支払う本契約の委託手数料は、甲の業務委託手数料表に基づき、法令で定められた源泉所得税及び第7条に定める経費等の合計額を差し引いた金額を、甲が乙に対し現金による支払いを原則とする。なお、甲が乙に支払う業務委託手数料には消費税が含まれている。</div>
       <div class="article-item">２．乙の公租については、乙自らの責任において対処すること。</div>
-
       <div class="article-title">第５条（委託手数料率の改訂）</div>
       <div class="article-body">第４条に規定した委託手数料率は、物価・経済状況の変化、その他料率の変更を必要とする事由が生じた場合は、甲乙協議の上、委託手数料率を改訂することができる。</div>
-
       <div class="article-title">第６条（本契約における乙の地位）</div>
       <div class="article-item">１．乙は、甲が委託する業務を請け負うものであり、甲との雇用関係にはなく、当然に社会保険・労働保険の加入はない。</div>
       <div class="article-item">２．したがって、業務上の災害など万一の場合においても、雇用関係としての補償を甲に対して求めることはできないものとする。</div>
       <div class="article-item">３．乙は自己の責任において、適切な確定申告を行い納税の義務を果たすものとする。</div>
       <div class="article-item">４．乙は独立した個人事業主であるため甲は乙の兼業を禁止することはできない。</div>
-
       <div class="article-title">第７条（業務委託に付随する経費等）</div>
       <div class="article-item">１．乙が委託業務を実施するために必要な着類、用具、ヘアメイク等に対しての経費、及び維持費は乙の負担とし、乙は自らの責任において着類等を調達し、ヘアメイクを行う。</div>
       <div class="article-item">２．なお、乙が業務を遂行する際に必要となる用具、ヘアメイク等は甲から有料にて支給若しくは貸出を受けることもできる。</div>
-
       <div class="article-title">第８条（損害賠償）</div>
       <div class="article-item">１．本契約業務の遂行中、乙の故意または過失により、甲もしくは第三者に与えた損害に対し、乙は損害賠償の責任を負う。</div>
       <div class="article-item">２．甲の事業である接待飲食等営業の利用者がその業務に対して支払うべきサービスの利用料に関して未収が生じた場合には、乙が利用者から収受し、甲に受け渡すものとする。</div>
-
       <div class="article-title">第９条（禁止事項）</div>
       <div class="article-item">１．乙は、委託業務の遂行時間以外で待機の時間が生じた場合であっても、待機時間を甲の事務所において過ごすことはできない。</div>
       <div class="article-item">２．ただし待機場所の使用料を支払うことで甲の事務所にて待機することができる。</div>
-
       <div class="article-title">第10条（守秘義務）</div>
       <div class="article-body">乙は、本契約に基づき業務上知り得た情報、または甲の機密書類及びデータ等を外部に持ち出し、第三者に対し提供または漏洩してはならない。万一、違反した場合は甲に対し損害賠償の責を負う。</div>
-
       <div class="article-title">第11条（所有権及び肖像権）</div>
       <div class="article-body">業務遂行にあたり必要となる写真、情報については甲に所有権があることとする。</div>
-
       <div class="article-title">第12条（協議）</div>
       <div class="article-body">本契約書及び個別契約書に定めのない事項、または本契約及び個別契約の履行にあたり疑義を生じた事項は、甲乙協議の上円満に解決をはかるものとする。</div>
     </div>
@@ -290,15 +324,6 @@
 
   <!-- 署名欄 -->
   <div class="doc-sec" style="background:#546E7A"><i class="bi bi-pen me-1"></i>署名欄</div>
-
-  <!-- 日付 -->
-  <div class="doc-row">
-    <div class="doc-label">日　　付</div>
-    <div class="canvas-wrap" style="min-height:52px">
-      <canvas id="c_date"></canvas>
-      <button class="clear-btn" onclick="clearField('c_date')">✕</button>
-    </div>
-  </div>
 
   <!-- 甲（自動） -->
   <div class="doc-sec" style="background:#78909C;font-size:0.76rem">甲 <span class="badge-ko ms-1">自動入力</span></div>
@@ -319,27 +344,28 @@
     </div>
   </div>
 
-  <!-- 乙（手書き） -->
-  <div class="doc-sec" style="background:#F57F17;color:#fff;font-size:0.76rem">乙 <span class="badge-oto ms-1">手書き入力</span></div>
-  <div class="doc-row" style="min-height:60px">
+  <!-- 乙（入力＋手書き） -->
+  <div class="doc-sec" style="background:#F57F17;color:#fff;font-size:0.76rem">乙 <span class="badge-oto ms-1">入力 / 手書き</span></div>
+
+  <div class="doc-row">
     <div class="doc-label">住　　所</div>
-    <div class="canvas-wrap">
-      <canvas id="c_oto_addr"></canvas>
-      <button class="clear-btn" onclick="clearField('c_oto_addr')">✕</button>
+    <div class="doc-input-wrap">
+      <input type="text" id="inputOtoAddr" class="doc-text-input" placeholder="〒000-0000 住所を入力">
     </div>
   </div>
-  <div class="doc-row">
-    <div class="doc-label">氏　　名<br><span style="font-size:0.72rem">（本名）</span></div>
+
+  <div class="doc-row" style="min-height:60px">
+    <div class="doc-label">氏　　名<br><span style="font-size:0.7rem;font-weight:400;color:#555">本名（手書き）</span></div>
     <div class="canvas-wrap">
       <canvas id="c_oto_realname"></canvas>
       <button class="clear-btn" onclick="clearField('c_oto_realname')">✕</button>
     </div>
   </div>
+
   <div class="doc-row">
     <div class="doc-label">源 氏 名</div>
-    <div class="canvas-wrap">
-      <canvas id="c_oto_alias"></canvas>
-      <button class="clear-btn" onclick="clearField('c_oto_alias')">✕</button>
+    <div class="doc-input-wrap">
+      <input type="text" id="inputOtoAlias" class="doc-text-input" placeholder="源氏名を入力">
     </div>
   </div>
 

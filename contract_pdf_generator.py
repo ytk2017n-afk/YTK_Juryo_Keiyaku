@@ -128,7 +128,8 @@ class SectionBar(Flowable):
 def generate_contract_pdf(data: dict, out_path: str) -> str:
     """
     data キー:
-      fields: { oto_preamble, date, oto_addr, oto_realname, oto_alias }  ← Canvas base64 PNG
+      fields: { oto_preamble, oto_realname }  ← Canvas base64 PNG（手書き2箇所）
+      date_text, oto_addr, oto_alias          ← テキスト入力
       store_name, store_address
     """
     _ensure_fonts()
@@ -136,6 +137,9 @@ def generate_contract_pdf(data: dict, out_path: str) -> str:
     fields        = data.get("fields", {})
     store_name    = data.get("store_name",    "")
     store_address = data.get("store_address", "")
+    date_text     = data.get("date_text",     "")
+    oto_addr      = data.get("oto_addr",      "")
+    oto_alias     = data.get("oto_alias",     "")
 
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
 
@@ -251,7 +255,7 @@ def generate_contract_pdf(data: dict, out_path: str) -> str:
     ))
 
     # ── 署名欄 ──────────────────────────────────────────────────────────────
-    story.append(HandwritingField(fields.get("date",""), "日　　付", height=12*mm))
+    story.append(AutoField(date_text, "日　　付", height=11*mm))
     story.append(SP(4))
 
     story.append(Paragraph("甲", sty("kos", fontName=FB, fontSize=8.5)))
@@ -263,11 +267,11 @@ def generate_contract_pdf(data: dict, out_path: str) -> str:
 
     story.append(Paragraph("乙", sty("otos", fontName=FB, fontSize=8.5)))
     story.append(SP(1))
-    story.append(HandwritingField(fields.get("oto_addr",     ""), "住　　所",     height=13*mm))
+    story.append(AutoField(oto_addr,  "住　　所",    height=11*mm))
     story.append(SP(1))
-    story.append(HandwritingField(fields.get("oto_realname", ""), "氏名（本名）",  height=12*mm))
+    story.append(HandwritingField(fields.get("oto_realname", ""), "氏名（本名）", height=13*mm))
     story.append(SP(1))
-    story.append(HandwritingField(fields.get("oto_alias",    ""), "源 氏 名",     height=12*mm))
+    story.append(AutoField(oto_alias, "源 氏 名",    height=11*mm))
 
     story.append(SP(4))
     story.append(Paragraph("Ver.キャバクラ190522", sty("ver", fontSize=7, textColor=C_NOTE)))

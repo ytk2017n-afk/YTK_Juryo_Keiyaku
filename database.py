@@ -86,6 +86,10 @@ class Contract(Base):
     oto_realname_b64 = Column(Text, nullable=True)   # 本名
     oto_alias_b64    = Column(Text, nullable=True)   # 源氏名
 
+    date_text     = Column(String(50),  nullable=True)
+    oto_addr_text = Column(String(256), nullable=True)
+    oto_alias_text= Column(String(64),  nullable=True)
+
     pdf_filename = Column(String(256), nullable=True)
     pdf_data     = Column(LargeBinary, nullable=True)
     submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

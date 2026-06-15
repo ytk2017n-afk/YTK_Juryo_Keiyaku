@@ -1,18 +1,14 @@
 /**
- * 契約書手書きCanvas管理 - Apple Pencil / タッチ対応
+ * 契約書手書きCanvas管理
+ * 手書き: 氏名（c_oto_preamble）、本名（c_oto_realname）の2箇所のみ
+ * 入力式: 日付（日付ピッカー）、住所、源氏名
  */
 
 let penSize  = 2;
 let penColor = '#1A237E';
 const DPR    = window.devicePixelRatio || 1;
 
-const FIELD_IDS = [
-  'c_oto_preamble',
-  'c_date',
-  'c_oto_addr',
-  'c_oto_realname',
-  'c_oto_alias',
-];
+const FIELD_IDS = ['c_oto_preamble', 'c_oto_realname'];
 
 // ── Canvas初期化 ─────────────────────────────────────────────────────────────
 function initCanvas(canvas) {
@@ -28,8 +24,8 @@ function initCanvas(canvas) {
 
   const ctx = canvas.getContext('2d');
   ctx.scale(DPR, DPR);
-  ctx.lineCap    = 'round';
-  ctx.lineJoin   = 'round';
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
   ctx.strokeStyle = penColor;
   ctx.lineWidth   = penSize;
 }
@@ -80,11 +76,11 @@ function attachDrawEvents(canvas) {
     canvas.getContext('2d').beginPath();
   }
 
-  canvas.addEventListener('pointerdown',  start, { passive: false });
-  canvas.addEventListener('pointermove',  move,  { passive: false });
-  canvas.addEventListener('pointerup',    end);
-  canvas.addEventListener('pointerleave', end);
-  canvas.addEventListener('pointercancel',end);
+  canvas.addEventListener('pointerdown',   start, { passive: false });
+  canvas.addEventListener('pointermove',   move,  { passive: false });
+  canvas.addEventListener('pointerup',     end);
+  canvas.addEventListener('pointerleave',  end);
+  canvas.addEventListener('pointercancel', end);
   canvas.addEventListener('touchstart', start, { passive: false });
   canvas.addEventListener('touchmove',  move,  { passive: false });
   canvas.addEventListener('touchend',   end);
@@ -118,11 +114,18 @@ function clearField(canvasId) {
 }
 
 function clearAllFields() {
-  if (!confirm('全フィールドの手書き内容を消去しますか？')) return;
+  if (!confirm('手書きフィールドの内容を消去しますか？')) return;
   FIELD_IDS.forEach(id => clearField(id));
 }
 
-// ── 送信処理 ─────────────────────────────────────────────────────────────────
+// ── 日付フォーマット ──────────────────────────────────────────────────────────
+function formatDateJP(isoDate) {
+  if (!isoDate) return '';
+  const [y, m, d] = isoDate.split('-');
+  return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+}
+
+// ── Canvas空判定 ─────────────────────────────────────────────────────────────
 function isCanvasEmpty(canvas) {
   const blank = document.createElement('canvas');
   blank.width  = canvas.width;
@@ -130,24 +133,34 @@ function isCanvasEmpty(canvas) {
   return canvas.toDataURL() === blank.toDataURL();
 }
 
+// ── 送信処理 ─────────────────────────────────────────────────────────────────
 async function submitContract() {
   const overlay = document.getElementById('loadingOverlay');
   overlay.style.display = 'flex';
 
-  const fields = {};
+  // 手書き画像
+  const canvasData = {};
   FIELD_IDS.forEach(id => {
     const c = document.getElementById(id);
     if (!c) return;
-    // c_oto_preamble → oto_preamble のようにプレフィックス c_ を除去
     const key = id.replace(/^c_/, '');
-    fields[key] = isCanvasEmpty(c) ? '' : c.toDataURL('image/png');
+    canvasData[key] = isCanvasEmpty(c) ? '' : c.toDataURL('image/png');
   });
+
+  // テキスト入力
+  const dateIso  = document.getElementById('contractDate').value;
+  const payload  = {
+    ...canvasData,
+    date:      formatDateJP(dateIso),
+    oto_addr:  document.getElementById('inputOtoAddr').value,
+    oto_alias: document.getElementById('inputOtoAlias').value,
+  };
 
   try {
     const res = await fetch('/contract/submit', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(fields),
+      body:    JSON.stringify(payload),
     });
 
     if (res.ok) {
@@ -185,15 +198,13 @@ window.addEventListener('resize', () => {
   }, 200);
 });
 
-// ── 条文トグルのアイコン切り替え ─────────────────────────────────────────────
+// ── 起動 ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initAllCanvases();
   attachAllDrawEvents();
 
   const toggle = document.querySelector('.articles-toggle');
   if (toggle) {
-    toggle.addEventListener('click', () => {
-      toggle.classList.toggle('collapsed');
-    });
+    toggle.addEventListener('click', () => toggle.classList.toggle('collapsed'));
   }
 });
