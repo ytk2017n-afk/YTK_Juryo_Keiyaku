@@ -1,4 +1,4 @@
-"""受領書PDF生成 - 手書きCanvas画像を各フィールドに合成"""
+"""受領書PDF生成 - 新レイアウト（手書き3箇所、その他テキスト入力）"""
 import os, base64, io
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
@@ -42,7 +42,7 @@ C_MID   = HexColor("#888888")
 C_NOTE  = HexColor("#999999")
 
 
-def _draw_field_image(cv, b64: str, x: float, y: float, w: float, h: float):
+def _draw_field_image(cv, b64: str, x, y, w, h):
     """Canvas画像（dataURL）をPDF座標系に描画する"""
     if not b64 or not b64.startswith("data:image"):
         return
@@ -59,8 +59,9 @@ def _draw_field_image(cv, b64: str, x: float, y: float, w: float, h: float):
 def generate_receipt_pdf(data: dict, out_path: str) -> str:
     """
     data キー:
-      fields: { atena, date, invoice, shopname, alias, realname,
-                addr1, addr2, amount, tax, total, desc, sig }  ← Canvas base64 PNG
+      fields: { realname, alias, sig }  ← Canvas base64 PNG（手書き3箇所）
+      date_text, atena, address, phone
+      amount_text, tax_text, total_text, desc
       store_name, store_address, store_contact, store_invoice_no
     """
     _ensure_fonts()
@@ -69,7 +70,8 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     MX   = 30
     CW   = W - MX * 2
 
-    fields   = data.get("fields", {})
+    fields = data.get("fields", {})
+
     tmp_path = out_path + ".base.pdf"
     cv       = rl_canvas.Canvas(tmp_path, pagesize=A4)
     cv.setTitle("受領書")
@@ -95,29 +97,34 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
         t(x+8, y+h/2-4, label, FB, 8, white)
         return y - h
 
-    # 行描画: ラベル列＋手書き画像列
-    LBL_W = 75   # ラベル列幅（固定pt）
+    LBL_W = 75   # ラベル列幅
 
-    def row(x, y, w, h, label, field_key,
-            lf=C_LBL, vf=C_INP, lf_fs=8, lw=0.5,
-            prefix="", suffix="", prefix_w=0):
-        # ラベル
-        fr(x, y, LBL_W, h, lf, black, lw)
-        t(x+LBL_W/2, y+h/2-lf_fs*0.4, label, FB, lf_fs, black if lf not in (C_HDR,) else white, "center")
-        # プレフィックス（¥ or T）
-        px = x + LBL_W
-        if prefix:
-            fr(px, y, prefix_w, h, vf, black, lw)
-            t(px+prefix_w/2, y+h/2-9*0.4, prefix, FB, 11, black, "center")
-            px += prefix_w
-        # 入力エリア（手書き画像）
-        vw = w - (px - x)
-        fr(px, y, vw, h, vf, black, lw)
-        _draw_field_image(cv, fields.get(field_key,""), px, y, vw, h)
-        # サフィックス
-        if suffix:
-            t(x+w-14, y+h/2-9*0.4, suffix, FB, 12, black)
-        return px, y, vw, h   # 値エリア座標
+    def text_row(x, y, w, h, label, value, lf=C_LBL, vf=C_INP, fs=8.5):
+        """テキスト値を表示する行"""
+        fr(x,         y, LBL_W, h, lf, black, 0.5)
+        t(x+LBL_W/2,  y+h/2-4, label, FB, 7.5, black, "center")
+        fr(x+LBL_W,   y, w-LBL_W, h, vf, black, 0.5)
+        t(x+LBL_W+6,  y+h/2-4, value or "", FR, fs, black)
+
+    def canvas_row(x, y, w, h, label, field_key, lf=C_LBL, vf=C_INP):
+        """手書きCanvas画像を表示する行"""
+        fr(x,        y, LBL_W, h, lf, black, 0.5)
+        t(x+LBL_W/2, y+h/2-4, label, FB, 7.5, black, "center")
+        vw = w - LBL_W
+        fr(x+LBL_W,  y, vw, h, vf, black, 0.5)
+        _draw_field_image(cv, fields.get(field_key, ""), x+LBL_W, y, vw, h)
+        return x+LBL_W, y, vw, h
+
+    def yen_text_row(x, y, w, h, label, value, lf=C_LBL, vf=C_INP, fs=11,
+                     lf_color=black, lf_font=FB, lf_text_color=black):
+        """¥プレフィックス付きテキスト行"""
+        fr(x,        y, LBL_W, h, lf, black, 0.5)
+        t(x+LBL_W/2, y+h/2-4, label, lf_font, 7.5, lf_text_color, "center")
+        PREW = 18
+        fr(x+LBL_W,       y, PREW, h, vf, black, 0.5)
+        t(x+LBL_W+PREW/2, y+h/2-5, "¥", FB, 11, lf_color, "center")
+        fr(x+LBL_W+PREW,  y, w-LBL_W-PREW, h, vf, black, 0.5)
+        t(x+LBL_W+PREW+6, y+h/2-4, value or "", FR, fs, black)
 
     # ── 外枠 ───────────────────────────────────────────────────────────────────
     OT, OB = H - 24, 58
@@ -127,80 +134,86 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     cv.restoreState()
 
     # ── タイトル ────────────────────────────────────────────────────────────────
-    TH = 44; TY = OT - TH
+    TH = 40; TY = OT - TH
     fr(MX, TY, CW, TH, C_HDR, black, 2.5)
-    t(MX+CW/2, TY+TH/2-10, "受　　領　　書", FB, 20, white, "center")
+    t(MX+CW/2, TY+TH/2-9, "受　　領　　書", FB, 18, white, "center")
     cur = TY
 
-    # ── 宛名（大きめ） ──────────────────────────────────────────────────────────
-    AH = 44; ALW = 60; SAMA_W = 28
+    # ── 日付 ────────────────────────────────────────────────────────────────────
+    DH = 28
+    cur -= DH
+    text_row(MX, cur, CW, DH, "日　　付", data.get("date_text", ""), lf=C_LBL, vf=C_INP)
+
+    # ── 宛名 ────────────────────────────────────────────────────────────────────
+    AH = 44
     cur -= AH
-    fr(MX,             cur, ALW,          AH, C_HDR, black, 1.5)
-    t(MX+ALW/2,        cur+AH/2-7, "宛　名", FB, 11, white, "center")
-    fr(MX+ALW,         cur, CW-ALW-SAMA_W, AH, C_INP, black, 1.5)
-    _draw_field_image(cv, fields.get("atena",""), MX+ALW, cur, CW-ALW-SAMA_W, AH)
-    fr(MX+CW-SAMA_W,   cur, SAMA_W, AH, C_INP, black, 1.5)
-    t(MX+CW-SAMA_W/2,  cur+AH/2-8, "様", FB, 13, black, "center")
+    ALW = 55; SAMA_W = 30
+    fr(MX,           cur, ALW,              AH, C_HDR, black, 1.5)
+    t(MX+ALW/2,      cur+AH/2-7, "宛　名", FB, 11, white, "center")
+    fr(MX+ALW,       cur, CW-ALW-SAMA_W,   AH, C_INP, black, 1.5)
+    atena = data.get("atena", "")
+    t(MX+ALW+8,      cur+AH/2-7, atena, FB, 13, black)
+    fr(MX+CW-SAMA_W, cur, SAMA_W,           AH, C_INP, black, 1.5)
+    t(MX+CW-SAMA_W/2,cur+AH/2-7, "様", FB, 13, black, "center")
 
     SH = 12   # セクション見出し高さ
-
-    # ── 基本情報 ────────────────────────────────────────────────────────────────
-    RH = 40   # 通常行高
-    cur = sec(MX, cur-SH, CW, SH, "■ 基本情報")
-    cur -= RH; row(MX, cur, CW, RH, "日　　付",     "date")
-    cur -= RH; row(MX, cur, CW, RH, "インボイス番号","invoice", prefix="T", prefix_w=16)
-    cur -= RH; row(MX, cur, CW, RH, "店　舗　名",   "shopname")
+    RH = 36   # 通常行高
 
     # ── 受取人情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 受取人情報")
-    cur -= RH; row(MX, cur, CW, RH, "源 氏 名", "alias")
-    cur -= RH; row(MX, cur, CW, RH, "本　　名", "realname")
-    cur -= RH; row(MX, cur, CW, RH, "住　　所", "addr1")
-    RA = 30   # 続き行
-    cur -= RA; row(MX, cur, CW, RA, "（続き）", "addr2", lf=C_LBL_S, vf=C_INP_S, lf_fs=7)
+    cur -= RH+4; canvas_row(MX, cur, CW, RH+4, "本　　名", "realname")
+    cur -= RH+4; canvas_row(MX, cur, CW, RH+4, "源 氏 名", "alias")
+    cur -= RH;   text_row(MX, cur, CW, RH, "住　　所",  data.get("address", ""))
+    cur -= RH;   text_row(MX, cur, CW, RH, "電話番号",  data.get("phone",   ""))
 
     # ── 金額 ────────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 金額")
 
-    RLG = 44  # 金額大きい行
+    RLG = 42
     cur -= RLG
     fr(MX,        cur, LBL_W, RLG, C_LBL, black, 1.2)
-    t(MX+LBL_W/2, cur+RLG/2-6, "金　　額", FB, 10, black, "center")
-    PREW = 20
+    t(MX+LBL_W/2, cur+RLG/2-5, "金　　額", FB, 9, black, "center")
+    PREW = 18
     fr(MX+LBL_W,  cur, PREW, RLG, C_INP, black, 1.2)
-    t(MX+LBL_W+PREW/2, cur+RLG/2-8, "¥", FB, 13, black, "center")
+    t(MX+LBL_W+PREW/2, cur+RLG/2-7, "¥", FB, 12, black, "center")
     vx = MX+LBL_W+PREW; vw = CW-LBL_W-PREW
     fr(vx, cur, vw, RLG, C_INP, black, 1.2)
-    _draw_field_image(cv, fields.get("amount",""), vx, cur, vw, RLG)
+    t(vx+6, cur+RLG/2-5, data.get("amount_text", ""), FR, 11, black)
 
     # 消費税率固定
-    RS = 28
+    RS = 26
     cur -= RS
     fr(MX,       cur, LBL_W, RS, C_GRAY, black, 0.5)
-    t(MX+LBL_W/2,cur+RS/2-4, "消費税率", FR, 8, HexColor("#555555"), "center")
+    t(MX+LBL_W/2,cur+RS/2-4, "消費税率", FR, 7.5, HexColor("#555555"), "center")
     fr(MX+LBL_W, cur, CW-LBL_W, RS, C_GRAY, black, 0.5)
     t(MX+LBL_W+8,cur+RS/2-4, "10%（固定）", FR, 8, HexColor("#555555"))
 
     # 消費税額
-    cur -= RH; row(MX, cur, CW, RH, "消費税額", "tax", prefix="¥", prefix_w=PREW)
+    cur -= RH
+    text_row(MX, cur, CW, RH, "消費税額", "", lf=C_LBL, vf=C_INP)
+    fr(MX+LBL_W,       cur, PREW, RH, C_INP, black, 0.5)
+    t(MX+LBL_W+PREW/2, cur+RH/2-4, "¥", FB, 10, black, "center")
+    fr(MX+LBL_W+PREW,  cur, CW-LBL_W-PREW, RH, C_INP, black, 0.5)
+    t(MX+LBL_W+PREW+6, cur+RH/2-4, data.get("tax_text", ""), FR, 9, black)
 
     # 合計金額
     cur -= RLG
     fr(MX,        cur, LBL_W, RLG, C_HDR, black, 1.5)
-    t(MX+LBL_W/2, cur+RLG/2-6, "合計金額", FB, 10, white, "center")
+    t(MX+LBL_W/2, cur+RLG/2-5, "合計金額", FB, 9, white, "center")
     fr(MX+LBL_W,  cur, PREW, RLG, C_TOT_V, black, 1.5)
-    t(MX+LBL_W+PREW/2, cur+RLG/2-9, "¥", FB, 14, C_HDR, "center")
+    t(MX+LBL_W+PREW/2, cur+RLG/2-8, "¥", FB, 13, C_HDR, "center")
     fr(MX+LBL_W+PREW, cur, CW-LBL_W-PREW, RLG, C_TOT_V, black, 1.5)
-    _draw_field_image(cv, fields.get("total",""), MX+LBL_W+PREW, cur, CW-LBL_W-PREW, RLG)
+    t(MX+LBL_W+PREW+6, cur+RLG/2-5, data.get("total_text", ""), FB, 11, C_HDR)
 
     # ── 但し書 ──────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 但し書")
-    RD = 38
-    cur -= RD; row(MX, cur, CW, RD, "但 し 書", "desc")
+    RD = 32
+    cur -= RD
+    text_row(MX, cur, CW, RD, "但 し 書", data.get("desc", ""))
 
     # ── 発行者情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 発行者情報", C_SEC2)
-    STAMP_W = 60; INFO_W = CW - STAMP_W
+    STAMP_W = 55; INFO_W = CW - STAMP_W
     iss_top = cur
     iss_rows = [
         ("会 社 名", data.get("store_name",    "")),
@@ -209,25 +222,25 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     ]
     if data.get("store_invoice_no"):
         iss_rows.append(("インボイス", "T" + data["store_invoice_no"]))
-    IRH = 24
+    IRH = 22
     for label, val in iss_rows:
         cur -= IRH
         fr(MX,         cur, LBL_W, IRH, C_LBL_S, black, 0.5)
-        t(MX+LBL_W/2,  cur+IRH/2-4, label, FB, 7.5, black, "center")
+        t(MX+LBL_W/2,  cur+IRH/2-4, label, FB, 7, black, "center")
         fr(MX+LBL_W,   cur, INFO_W-LBL_W, IRH, C_INP_S, black, 0.5)
-        t(MX+LBL_W+6,  cur+IRH/2-4, val, FR, 8, black)
+        t(MX+LBL_W+6,  cur+IRH/2-4, val, FR, 7.5, black)
     stamp_h = iss_top - cur
     fr(MX+INFO_W, cur, STAMP_W, stamp_h, C_STAMP, black, 1)
-    t(MX+INFO_W+STAMP_W/2, cur+stamp_h/2+4,  "㊞",   FR, 18, C_MID, "center")
-    t(MX+INFO_W+STAMP_W/2, cur+stamp_h/2-14, "押印欄", FR, 7, C_MID, "center")
+    t(MX+INFO_W+STAMP_W/2, cur+stamp_h/2+4,  "㊞",   FR, 16, C_MID, "center")
+    t(MX+INFO_W+STAMP_W/2, cur+stamp_h/2-12, "押印欄", FR, 7, C_MID, "center")
 
     # ── 署名欄 ──────────────────────────────────────────────────────────────────
     SIG_H = 44; SIG_Y = OB + 2
     sig_lw = LBL_W
-    fr(MX,          SIG_Y, sig_lw,    SIG_H, C_HDR, black, 1.5)
-    t(MX+sig_lw/2,  SIG_Y+SIG_H/2-5, "署　名", FB, 9, white, "center")
-    fr(MX+sig_lw,   SIG_Y, CW-sig_lw, SIG_H, C_INP, black, 1.5)
-    _draw_field_image(cv, fields.get("sig",""), MX+sig_lw, SIG_Y, CW-sig_lw, SIG_H)
+    fr(MX,         SIG_Y, sig_lw,     SIG_H, C_HDR, black, 1.5)
+    t(MX+sig_lw/2, SIG_Y+SIG_H/2-5,  "署　名", FB, 9, white, "center")
+    fr(MX+sig_lw,  SIG_Y, CW-sig_lw, SIG_H, C_INP, black, 1.5)
+    _draw_field_image(cv, fields.get("sig", ""), MX+sig_lw, SIG_Y, CW-sig_lw, SIG_H)
 
     SFX, SFY, SFW, SFH = MX+sig_lw, SIG_Y, CW-sig_lw, SIG_H
 

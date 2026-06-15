@@ -110,9 +110,9 @@ async def receipt_form(
     store: Store = Depends(require_login),
 ):
     return templates.TemplateResponse("receipt_form.html", {
-        "request": request,
-        "store": store,
-        "today": datetime.now().strftime("%Y年%m月%d日"),
+        "request":   request,
+        "store":     store,
+        "today_iso": datetime.now().strftime("%Y-%m-%d"),
     })
 
 @app.post("/receipt/submit-handwriting")
@@ -145,7 +145,15 @@ async def submit_handwriting(
     filename  = f"receipt_{store.login_id}_{receipt.id}_{timestamp}.pdf"
 
     pdf_bytes = _generate_pdf_bytes(generate_receipt_pdf, {
-        "fields":          fields,
+        "fields":          fields,          # realname/alias/sig の canvas base64
+        "date_text":       fields.get("date", ""),
+        "atena":           store.store_name,
+        "address":         fields.get("address", ""),
+        "phone":           fields.get("phone", ""),
+        "amount_text":     fields.get("amount", ""),
+        "tax_text":        fields.get("tax", ""),
+        "total_text":      fields.get("total", ""),
+        "desc":            fields.get("desc", ""),
         "store_name":      store.store_name,
         "store_address":   store.store_address or "",
         "store_contact":   store.store_contact or "",
