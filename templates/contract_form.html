@@ -214,6 +214,21 @@
   <input type="date" id="contractDate" value="{{ today_iso }}">
 </div>
 
+<!-- 女の子選択 -->
+{% if girls %}
+<div class="date-picker-bar" style="max-width:700px;margin:0 auto 8px;background:#E8F5E9;border-color:#A5D6A7">
+  <label style="color:#2E7D32;font-weight:700;white-space:nowrap"><i class="bi bi-person-fill me-1"></i>女の子：</label>
+  <select id="girlSelect" class="form-select form-select-sm" style="max-width:200px" onchange="fillGirlData()">
+    <option value="">-- 選択 --</option>
+    {% for g in girls %}
+    <option value="{{ g.id }}"
+            data-alias="{{ g.alias | e }}"
+            data-address="{{ g.address | e }}">{{ g.alias }}</option>
+    {% endfor %}
+  </select>
+</div>
+{% endif %}
+
 <!-- ペン設定ツールバー -->
 <div class="pen-toolbar sticky-top" style="top:110px;z-index:100">
   <span class="small fw-semibold text-muted">太さ:</span>
@@ -399,4 +414,13 @@
 
 {% block scripts %}
 <script src="/static/js/contract_handwriting.js"></script>
+<script>
+function fillGirlData() {
+  const sel = document.getElementById('girlSelect');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  document.getElementById('inputOtoAlias').value = opt.dataset.alias   || '';
+  document.getElementById('inputOtoAddr').value  = opt.dataset.address || '';
+}
+</script>
 {% endblock %}

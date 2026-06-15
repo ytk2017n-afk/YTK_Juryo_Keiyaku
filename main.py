@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
-from database import get_db, init_db, Store, Receipt, Contract
+from database import get_db, init_db, Store, Receipt, Contract, Girl
 from pdf_generator import generate_receipt_pdf
 from contract_pdf_generator import generate_contract_pdf
 
@@ -108,10 +108,13 @@ async def logout():
 async def receipt_form(
     request: Request,
     store: Store = Depends(require_login),
+    db: Session = Depends(get_db),
 ):
+    girls = db.query(Girl).filter(Girl.store_id == store.id, Girl.is_active == True).order_by(Girl.alias).all()
     return templates.TemplateResponse("receipt_form.html", {
         "request":   request,
         "store":     store,
+        "girls":     girls,
         "today_iso": datetime.now().strftime("%Y-%m-%d"),
     })
 
@@ -497,15 +500,89 @@ async def my_delete_contract(
     db.commit()
     return RedirectResponse("/my-docs?tab=contracts", status_code=303)
 
+# ── 女の子管理 ────────────────────────────────────────────────────────────────
+@app.get("/girls", response_class=HTMLResponse)
+async def girls_list(
+    request: Request,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    girls = db.query(Girl).filter(Girl.store_id == store.id).order_by(Girl.alias).all()
+    return templates.TemplateResponse("girls.html", {
+        "request": request,
+        "store":   store,
+        "girls":   girls,
+    })
+
+@app.post("/girls/create")
+async def girl_create(
+    alias:     str = Form(...),
+    real_name: str = Form(""),
+    address:   str = Form(""),
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    g = Girl(store_id=store.id, alias=alias, real_name=real_name or None, address=address or None)
+    db.add(g)
+    db.commit()
+    return RedirectResponse("/girls", status_code=303)
+
+@app.post("/girls/{girl_id}/update")
+async def girl_update(
+    girl_id:   int,
+    alias:     str = Form(...),
+    real_name: str = Form(""),
+    address:   str = Form(""),
+    is_active: str = Form(""),
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    g = db.query(Girl).filter(Girl.id == girl_id, Girl.store_id == store.id).first()
+    if not g:
+        raise HTTPException(404)
+    g.alias     = alias
+    g.real_name = real_name or None
+    g.address   = address or None
+    g.is_active = (is_active == "on")
+    db.commit()
+    return RedirectResponse("/girls", status_code=303)
+
+@app.post("/girls/{girl_id}/delete")
+async def girl_delete(
+    girl_id: int,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    g = db.query(Girl).filter(Girl.id == girl_id, Girl.store_id == store.id).first()
+    if not g:
+        raise HTTPException(404)
+    db.delete(g)
+    db.commit()
+    return RedirectResponse("/girls", status_code=303)
+
+@app.get("/girls/{girl_id}/json")
+async def girl_json(
+    girl_id: int,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    g = db.query(Girl).filter(Girl.id == girl_id, Girl.store_id == store.id).first()
+    if not g:
+        raise HTTPException(404)
+    return JSONResponse({"alias": g.alias or "", "real_name": g.real_name or "", "address": g.address or ""})
+
 # ── 契約書フォーム（店舗スタッフ） ─────────────────────────────────────────────
 @app.get("/contract", response_class=HTMLResponse)
 async def contract_form(
     request: Request,
     store: Store = Depends(require_login),
+    db: Session = Depends(get_db),
 ):
+    girls = db.query(Girl).filter(Girl.store_id == store.id, Girl.is_active == True).order_by(Girl.alias).all()
     return templates.TemplateResponse("contract_form.html", {
         "request":   request,
         "store":     store,
+        "girls":     girls,
         "today_iso": datetime.now().strftime("%Y-%m-%d"),
     })
 

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}女の子一覧{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="fw-bold mb-0"><i class="bi bi-people-fill me-2"></i>女の子一覧</h2>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGirlModal">
+    <i class="bi bi-plus-circle me-1"></i>追加
+  </button>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>源氏名</th>
+          <th>本名</th>
+          <th>住所</th>
+          <th>状態</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in girls %}
+        <tr>
+          <td class="fw-semibold">{{ g.alias }}</td>
+          <td class="text-muted">{{ g.real_name or "―" }}</td>
+          <td class="text-muted small">{{ g.address or "―" }}</td>
+          <td>
+            {% if g.is_active %}
+            <span class="badge bg-success">有効</span>
+            {% else %}
+            <span class="badge bg-secondary">無効</span>
+            {% endif %}
+          </td>
+          <td class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-secondary btn-edit"
+                    data-id="{{ g.id }}"
+                    data-alias="{{ g.alias | e }}"
+                    data-real-name="{{ g.real_name | e }}"
+                    data-address="{{ g.address | e }}"
+                    data-active="{{ 'true' if g.is_active else 'false' }}">
+              <i class="bi bi-pencil"></i> 編集
+            </button>
+            <form method="post" action="/girls/{{ g.id }}/delete"
+                  onsubmit="return confirm('「{{ g.alias }}」を削除しますか？')">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> 削除
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">まだ登録されていません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 追加モーダル -->
+<div class="modal fade" id="addGirlModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>女の子を追加</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/girls/create">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">源氏名 <span class="text-danger">*</span></label>
+            <input type="text" name="alias" class="form-control" placeholder="源氏名" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">本名</label>
+            <input type="text" name="real_name" class="form-control" placeholder="本名（任意）">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">住所</label>
+            <input type="text" name="address" class="form-control" placeholder="〒000-0000 住所（任意）">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="submit" class="btn btn-primary">登録する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal fade" id="editGirlModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-secondary text-white">
+        <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>女の子を編集</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" id="editForm" action="">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">源氏名 <span class="text-danger">*</span></label>
+            <input type="text" name="alias" id="edit_alias" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">本名</label>
+            <input type="text" name="real_name" id="edit_real_name" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">住所</label>
+            <input type="text" name="address" id="edit_address" class="form-control">
+          </div>
+          <div class="form-check">
+            <input type="checkbox" name="is_active" id="edit_is_active" class="form-check-input" value="on">
+            <label class="form-check-label" for="edit_is_active">有効（チェックを外すと無効）</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="submit" class="btn btn-primary">保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.btn-edit').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const d = this.dataset;
+    document.getElementById('editForm').action = `/girls/${d.id}/update`;
+    document.getElementById('edit_alias').value     = d.alias;
+    document.getElementById('edit_real_name').value = d.realName || '';
+    document.getElementById('edit_address').value   = d.address  || '';
+    document.getElementById('edit_is_active').checked = d.active === 'true';
+    new bootstrap.Modal(document.getElementById('editGirlModal')).show();
+  });
+});
+</script>
+{% endblock %}

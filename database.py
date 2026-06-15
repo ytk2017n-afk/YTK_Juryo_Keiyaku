@@ -35,6 +35,7 @@ class Store(Base):
 
     receipts  = relationship("Receipt",  back_populates="store")
     contracts = relationship("Contract", back_populates="store")
+    girls     = relationship("Girl",     back_populates="store")
 
 
 class Receipt(Base):
@@ -96,6 +97,20 @@ class Contract(Base):
     is_deleted   = Column(Boolean, default=False)
 
     store = relationship("Store", back_populates="contracts")
+
+
+class Girl(Base):
+    __tablename__ = "girls"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    store_id   = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    real_name  = Column(String(64),  nullable=True)   # 本名
+    alias      = Column(String(64),  nullable=False)  # 源氏名
+    address    = Column(String(256), nullable=True)   # 住所
+    is_active  = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    store = relationship("Store", back_populates="girls")
 
 
 def get_db():
