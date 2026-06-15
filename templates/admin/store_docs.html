@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ target.store_name }} 書類一覧{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+  <a href="/admin/stores" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> 店舗一覧
+  </a>
+  <h2 class="fw-bold mb-0"><i class="bi bi-folder2-open me-2"></i>{{ target.store_name }} — 書類一覧</h2>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="docsTabs">
+  <li class="nav-item">
+    <a class="nav-link {% if tab == 'receipts' %}active{% endif %}" href="?tab=receipts">
+      <i class="bi bi-receipt me-1"></i>受領書
+      <span class="badge bg-secondary ms-1">{{ receipts | length }}</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link {% if tab == 'contracts' %}active{% endif %}" href="?tab=contracts">
+      <i class="bi bi-file-earmark-text me-1"></i>契約書
+      <span class="badge bg-secondary ms-1">{{ contracts | length }}</span>
+    </a>
+  </li>
+</ul>
+
+{% if tab == 'receipts' %}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>日付</th>
+          <th>源氏名</th>
+          <th>合計金額</th>
+          <th>提出日時</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in receipts %}
+        <tr>
+          <td class="text-muted small">{{ r.id }}</td>
+          <td>{{ r.receipt_date or "―" }}</td>
+          <td>{{ r.name_alias or "―" }}</td>
+          <td>{{ ("¥ " + r.total_amount) if r.total_amount else "―" }}</td>
+          <td class="text-muted small">{{ r.submitted_at.strftime("%Y/%m/%d %H:%M") if r.submitted_at else "―" }}</td>
+          <td class="d-flex gap-1">
+            <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye"></i> 閲覧
+            </a>
+            <form method="post" action="/admin/receipts/{{ r.id }}/delete"
+                  onsubmit="return confirm('受領書 #{{ r.id }} を削除しますか？')">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> 削除
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">受領書がありません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>契約日</th>
+          <th>源氏名</th>
+          <th>提出日時</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in contracts %}
+        <tr>
+          <td class="text-muted small">{{ c.id }}</td>
+          <td>{{ c.date_text or "―" }}</td>
+          <td>{{ c.oto_alias_text or "―" }}</td>
+          <td class="text-muted small">{{ c.submitted_at.strftime("%Y/%m/%d %H:%M") if c.submitted_at else "―" }}</td>
+          <td class="d-flex gap-1">
+            <a href="/contract/pdf/{{ c.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye"></i> 閲覧
+            </a>
+            <form method="post" action="/admin/contracts/{{ c.id }}/delete"
+                  onsubmit="return confirm('契約書 #{{ c.id }} を削除しますか？')">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> 削除
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">契約書がありません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

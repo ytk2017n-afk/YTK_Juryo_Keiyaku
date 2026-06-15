@@ -402,6 +402,57 @@ async def update_store(
     db.commit()
     return RedirectResponse("/admin/stores", status_code=303)
 
+# ── 店舗別書類一覧 ────────────────────────────────────────────────────────────
+@app.get("/admin/stores/{store_id}/docs", response_class=HTMLResponse)
+async def store_docs(
+    store_id: int,
+    request:  Request,
+    tab:      str = "receipts",
+    store: Store = Depends(require_admin),
+    db: Session  = Depends(get_db),
+):
+    target = db.query(Store).filter(Store.id == store_id).first()
+    if not target:
+        raise HTTPException(404)
+    receipts  = db.query(Receipt).filter(Receipt.store_id == store_id, Receipt.is_deleted == False).order_by(Receipt.submitted_at.desc()).all()
+    contracts = db.query(Contract).filter(Contract.store_id == store_id, Contract.is_deleted == False).order_by(Contract.submitted_at.desc()).all()
+    return templates.TemplateResponse("admin/store_docs.html", {
+        "request":   request,
+        "store":     store,
+        "target":    target,
+        "receipts":  receipts,
+        "contracts": contracts,
+        "tab":       tab,
+    })
+
+@app.post("/admin/receipts/{receipt_id}/delete")
+async def delete_receipt(
+    receipt_id: int,
+    store: Store = Depends(require_admin),
+    db: Session  = Depends(get_db),
+):
+    r = db.query(Receipt).filter(Receipt.id == receipt_id).first()
+    if not r:
+        raise HTTPException(404)
+    store_id = r.store_id
+    r.is_deleted = True
+    db.commit()
+    return RedirectResponse(f"/admin/stores/{store_id}/docs?tab=receipts", status_code=303)
+
+@app.post("/admin/contracts/{contract_id}/delete")
+async def delete_contract(
+    contract_id: int,
+    store: Store = Depends(require_admin),
+    db: Session  = Depends(get_db),
+):
+    c = db.query(Contract).filter(Contract.id == contract_id).first()
+    if not c:
+        raise HTTPException(404)
+    store_id = c.store_id
+    c.is_deleted = True
+    db.commit()
+    return RedirectResponse(f"/admin/stores/{store_id}/docs?tab=contracts", status_code=303)
+
 # ── 契約書フォーム（店舗スタッフ） ─────────────────────────────────────────────
 @app.get("/contract", response_class=HTMLResponse)
 async def contract_form(

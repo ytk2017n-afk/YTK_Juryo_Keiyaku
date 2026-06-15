@@ -35,6 +35,9 @@
             {% endif %}
           </td>
           <td class="d-flex gap-1">
+            <a href="/admin/stores/{{ s.id }}/docs" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-folder2-open"></i> 書類一覧
+            </a>
             <button class="btn btn-sm btn-outline-secondary btn-edit"
                     data-id="{{ s.id }}"
                     data-name="{{ s.store_name | e }}"
