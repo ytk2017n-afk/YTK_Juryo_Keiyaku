@@ -17,6 +17,10 @@
       <div class="row g-2 small">
         <div class="col-5 text-muted">店舗名（甲）</div>
         <div class="col-7 fw-semibold">{{ store.store_name }}</div>
+        <div class="col-5 text-muted">源氏名</div>
+        <div class="col-7 fw-semibold">{{ contract.oto_alias_text or "―" }}</div>
+        <div class="col-5 text-muted">契約日</div>
+        <div class="col-7">{{ contract.date_text or "―" }}</div>
         <div class="col-5 text-muted">提出日時</div>
         <div class="col-7">{{ contract.submitted_at.strftime("%Y年%m月%d日 %H:%M") if contract.submitted_at else "―" }}</div>
         <div class="col-5 text-muted">書類番号</div>
