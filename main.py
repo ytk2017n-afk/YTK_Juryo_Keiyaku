@@ -402,6 +402,24 @@ async def update_store(
     db.commit()
     return RedirectResponse("/admin/stores", status_code=303)
 
+# ── 自店舗の提出済書類一覧（スタッフ用） ──────────────────────────────────────
+@app.get("/my-docs", response_class=HTMLResponse)
+async def my_docs(
+    request: Request,
+    tab:     str = "receipts",
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    receipts  = db.query(Receipt).filter(Receipt.store_id == store.id, Receipt.is_deleted == False).order_by(Receipt.submitted_at.desc()).all()
+    contracts = db.query(Contract).filter(Contract.store_id == store.id, Contract.is_deleted == False).order_by(Contract.submitted_at.desc()).all()
+    return templates.TemplateResponse("my_docs.html", {
+        "request":   request,
+        "store":     store,
+        "receipts":  receipts,
+        "contracts": contracts,
+        "tab":       tab,
+    })
+
 # ── 店舗別書類一覧 ────────────────────────────────────────────────────────────
 @app.get("/admin/stores/{store_id}/docs", response_class=HTMLResponse)
 async def store_docs(

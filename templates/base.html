@@ -27,6 +27,7 @@
       {% else %}
         <a href="/receipt"  class="btn btn-sm {{ 'btn-light' if '/receipt'  in request.url.path else 'btn-outline-light' }}">受領書</a>
         <a href="/contract" class="btn btn-sm {{ 'btn-light' if '/contract' in request.url.path else 'btn-outline-light' }}">契約書</a>
+        <a href="/my-docs"  class="btn btn-sm {{ 'btn-light' if '/my-docs'  in request.url.path else 'btn-outline-light' }}">提出済書類</a>
       {% endif %}
       <a href="/logout" class="btn btn-sm btn-outline-light">ログアウト</a>
     </div>
