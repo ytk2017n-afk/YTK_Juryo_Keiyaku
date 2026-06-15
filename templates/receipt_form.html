@@ -227,7 +227,8 @@
     <option value="{{ g.id }}"
             data-alias="{{ g.alias | e }}"
             data-real-name="{{ g.real_name | e }}"
-            data-address="{{ g.address | e }}">{{ g.alias }}</option>
+            data-address="{{ g.address | e }}"
+            data-phone="{{ g.phone | e }}">{{ g.alias }}</option>
     {% endfor %}
   </select>
 </div>
@@ -410,6 +411,7 @@ function fillGirlData() {
   if (!opt || !opt.value) return;
   document.getElementById('inputAlias').value   = opt.dataset.alias   || '';
   document.getElementById('inputAddress').value = opt.dataset.address || '';
+  document.getElementById('inputPhone').value   = opt.dataset.phone   || '';
 }
 </script>
 {% endblock %}

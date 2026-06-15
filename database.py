@@ -107,6 +107,7 @@ class Girl(Base):
     real_name  = Column(String(64),  nullable=True)   # 本名
     alias      = Column(String(64),  nullable=False)  # 源氏名
     address    = Column(String(256), nullable=True)   # 住所
+    phone      = Column(String(32),  nullable=True)   # 電話番号
     is_active  = Column(Boolean, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 

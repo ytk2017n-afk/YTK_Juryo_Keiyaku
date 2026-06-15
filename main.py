@@ -519,10 +519,11 @@ async def girl_create(
     alias:     str = Form(...),
     real_name: str = Form(""),
     address:   str = Form(""),
+    phone:     str = Form(""),
     store: Store = Depends(require_login),
     db: Session  = Depends(get_db),
 ):
-    g = Girl(store_id=store.id, alias=alias, real_name=real_name or None, address=address or None)
+    g = Girl(store_id=store.id, alias=alias, real_name=real_name or None, address=address or None, phone=phone or None)
     db.add(g)
     db.commit()
     return RedirectResponse("/girls", status_code=303)
@@ -533,6 +534,7 @@ async def girl_update(
     alias:     str = Form(...),
     real_name: str = Form(""),
     address:   str = Form(""),
+    phone:     str = Form(""),
     is_active: str = Form(""),
     store: Store = Depends(require_login),
     db: Session  = Depends(get_db),
@@ -543,6 +545,7 @@ async def girl_update(
     g.alias     = alias
     g.real_name = real_name or None
     g.address   = address or None
+    g.phone     = phone or None
     g.is_active = (is_active == "on")
     db.commit()
     return RedirectResponse("/girls", status_code=303)
@@ -569,7 +572,7 @@ async def girl_json(
     g = db.query(Girl).filter(Girl.id == girl_id, Girl.store_id == store.id).first()
     if not g:
         raise HTTPException(404)
-    return JSONResponse({"alias": g.alias or "", "real_name": g.real_name or "", "address": g.address or ""})
+    return JSONResponse({"alias": g.alias or "", "real_name": g.real_name or "", "address": g.address or "", "phone": g.phone or ""})
 
 # ── 契約書フォーム（店舗スタッフ） ─────────────────────────────────────────────
 @app.get("/contract", response_class=HTMLResponse)

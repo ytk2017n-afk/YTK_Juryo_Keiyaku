@@ -17,6 +17,7 @@
           <th>源氏名</th>
           <th>本名</th>
           <th>住所</th>
+          <th>電話番号</th>
           <th>状態</th>
           <th></th>
         </tr>
@@ -27,6 +28,7 @@
           <td class="fw-semibold">{{ g.alias }}</td>
           <td class="text-muted">{{ g.real_name or "―" }}</td>
           <td class="text-muted small">{{ g.address or "―" }}</td>
+          <td class="text-muted small">{{ g.phone or "―" }}</td>
           <td>
             {% if g.is_active %}
             <span class="badge bg-success">有効</span>
@@ -40,6 +42,7 @@
                     data-alias="{{ g.alias | e }}"
                     data-real-name="{{ g.real_name | e }}"
                     data-address="{{ g.address | e }}"
+                    data-phone="{{ g.phone | e }}"
                     data-active="{{ 'true' if g.is_active else 'false' }}">
               <i class="bi bi-pencil"></i> 編集
             </button>
@@ -81,6 +84,10 @@
             <label class="form-label fw-semibold">住所</label>
             <input type="text" name="address" class="form-control" placeholder="〒000-0000 住所（任意）">
           </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">電話番号</label>
+            <input type="tel" name="phone" class="form-control" placeholder="000-0000-0000（任意）">
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
@@ -113,6 +120,10 @@
             <label class="form-label fw-semibold">住所</label>
             <input type="text" name="address" id="edit_address" class="form-control">
           </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">電話番号</label>
+            <input type="tel" name="phone" id="edit_phone" class="form-control">
+          </div>
           <div class="form-check">
             <input type="checkbox" name="is_active" id="edit_is_active" class="form-check-input" value="on">
             <label class="form-check-label" for="edit_is_active">有効（チェックを外すと無効）</label>
@@ -135,6 +146,7 @@ document.querySelectorAll('.btn-edit').forEach(btn => {
     document.getElementById('edit_alias').value     = d.alias;
     document.getElementById('edit_real_name').value = d.realName || '';
     document.getElementById('edit_address').value   = d.address  || '';
+    document.getElementById('edit_phone').value     = d.phone    || '';
     document.getElementById('edit_is_active').checked = d.active === 'true';
     new bootstrap.Modal(document.getElementById('editGirlModal')).show();
   });
