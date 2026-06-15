@@ -126,16 +126,16 @@ async def submit_handwriting(
 
     receipt = Receipt(
         store_id      = store.id,
-        shop_name     = "",   # 手書きなのでテキストなし
-        receipt_date  = "",
-        invoice_no    = "",
-        name_alias    = "",
-        name_real     = "",
-        address       = "",
-        amount        = "",
-        tax_amount    = "",
-        total_amount  = "",
-        description   = "",
+        shop_name     = store.store_name,
+        receipt_date  = fields.get("date", ""),
+        invoice_no    = store.invoice_no or "",
+        name_alias    = "",   # 手書きのためテキスト取得不可
+        name_real     = "",   # 手書きのためテキスト取得不可
+        address       = fields.get("address", ""),
+        amount        = fields.get("amount", ""),
+        tax_amount    = fields.get("tax", ""),
+        total_amount  = fields.get("total", ""),
+        description   = fields.get("desc", ""),
         signature_b64 = fields.get("sig", ""),
     )
     db.add(receipt)
