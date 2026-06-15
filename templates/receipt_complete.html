@@ -15,7 +15,7 @@
         <div class="col-5 text-muted">宛名</div>
         <div class="col-7 fw-semibold">{{ receipt.shop_name or store.store_name }} 様</div>
         <div class="col-5 text-muted">源氏名</div>
-        <div class="col-7">（手書き）</div>
+        <div class="col-7">{{ receipt.name_alias or "―" }}</div>
         <div class="col-5 text-muted">日付</div>
         <div class="col-7">{{ receipt.receipt_date or "―" }}</div>
         <div class="col-5 text-muted">合計金額</div>

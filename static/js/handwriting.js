@@ -7,7 +7,7 @@ let penSize  = 2;
 let penColor = '#1A237E';
 const DPR    = window.devicePixelRatio || 1;
 
-const FIELD_IDS = ['c_realname', 'c_alias', 'c_sig'];
+const FIELD_IDS = ['c_realname', 'c_sig'];
 
 // ── Canvas初期化 ─────────────────────────────────────────────────────────────
 function initCanvas(canvas) {
@@ -173,6 +173,7 @@ async function submitReceipt() {
   const payload = {
     ...canvasData,
     date:    dateText,
+    alias:   document.getElementById('inputAlias').value,
     address: document.getElementById('inputAddress').value,
     phone:   document.getElementById('inputPhone').value,
     amount:  amount > 0 ? amount.toLocaleString() : '',

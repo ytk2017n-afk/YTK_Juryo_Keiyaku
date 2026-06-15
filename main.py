@@ -129,7 +129,7 @@ async def submit_handwriting(
         shop_name     = store.store_name,
         receipt_date  = fields.get("date", ""),
         invoice_no    = store.invoice_no or "",
-        name_alias    = "",   # 手書きのためテキスト取得不可
+        name_alias    = fields.get("alias", ""),
         name_real     = "",   # 手書きのためテキスト取得不可
         address       = fields.get("address", ""),
         amount        = fields.get("amount", ""),
@@ -148,6 +148,7 @@ async def submit_handwriting(
         "fields":          fields,          # realname/alias/sig の canvas base64
         "date_text":       fields.get("date", ""),
         "atena":           store.store_name,
+        "alias":           fields.get("alias", ""),
         "address":         fields.get("address", ""),
         "phone":           fields.get("phone", ""),
         "amount_text":     fields.get("amount", ""),
