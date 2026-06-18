@@ -508,10 +508,28 @@ async def girls_list(
     db: Session  = Depends(get_db),
 ):
     girls = db.query(Girl).filter(Girl.store_id == store.id).order_by(Girl.alias).all()
+
+    # キャスト名ごとの提出件数を集計
+    receipt_counts = {}
+    contract_counts = {}
+    for g in girls:
+        receipt_counts[g.id] = db.query(Receipt).filter(
+            Receipt.store_id == store.id,
+            Receipt.name_alias == g.alias,
+            Receipt.is_deleted == False,
+        ).count()
+        contract_counts[g.id] = db.query(Contract).filter(
+            Contract.store_id == store.id,
+            Contract.oto_alias_text == g.alias,
+            Contract.is_deleted == False,
+        ).count()
+
     return templates.TemplateResponse("girls.html", {
-        "request": request,
-        "store":   store,
-        "girls":   girls,
+        "request":         request,
+        "store":           store,
+        "girls":           girls,
+        "receipt_counts":  receipt_counts,
+        "contract_counts": contract_counts,
     })
 
 @app.post("/girls/create")

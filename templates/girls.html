@@ -18,6 +18,8 @@
           <th>本名</th>
           <th>住所</th>
           <th>電話番号</th>
+          <th class="text-center">受領書</th>
+          <th class="text-center">契約書</th>
           <th>状態</th>
           <th></th>
         </tr>
@@ -29,6 +31,22 @@
           <td class="text-muted">{{ g.real_name or "―" }}</td>
           <td class="text-muted small">{{ g.address or "―" }}</td>
           <td class="text-muted small">{{ g.phone or "―" }}</td>
+          <td class="text-center">
+            {% set rc = receipt_counts[g.id] %}
+            {% if rc > 0 %}
+            <a href="/my-docs?tab=receipts" class="badge bg-primary text-decoration-none">{{ rc }}件</a>
+            {% else %}
+            <span class="text-muted small">―</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% set cc = contract_counts[g.id] %}
+            {% if cc > 0 %}
+            <a href="/my-docs?tab=contracts" class="badge bg-success text-decoration-none">{{ cc }}件</a>
+            {% else %}
+            <span class="text-muted small">―</span>
+            {% endif %}
+          </td>
           <td>
             {% if g.is_active %}
             <span class="badge bg-success">有効</span>
