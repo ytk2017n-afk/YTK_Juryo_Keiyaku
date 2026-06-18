@@ -301,7 +301,7 @@ async def export_csv(
 
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["ID","店舗","日付","宛名(店舗名)","源氏名","本名","住所",
+    writer.writerow(["ID","店舗","日付","宛名(店舗名)","キャスト名","本名","住所",
                      "金額","消費税額","合計金額","但し書","提出日時"])
     for r in receipts:
         writer.writerow([

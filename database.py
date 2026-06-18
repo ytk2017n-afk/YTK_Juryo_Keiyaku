@@ -50,7 +50,7 @@ class Receipt(Base):
     shop_name     = Column(String(128), nullable=True)   # 宛名・店舗名
 
     # ── 受取人情報
-    name_alias    = Column(String(64),  nullable=True)   # 源氏名
+    name_alias    = Column(String(64),  nullable=True)   # キャスト名
     name_real     = Column(String(64),  nullable=True)   # 本名
     address       = Column(Text,        nullable=True)   # 住所
 
@@ -85,7 +85,7 @@ class Contract(Base):
     date_b64         = Column(Text, nullable=True)   # 日付
     oto_addr_b64     = Column(Text, nullable=True)   # 乙の住所
     oto_realname_b64 = Column(Text, nullable=True)   # 本名
-    oto_alias_b64    = Column(Text, nullable=True)   # 源氏名
+    oto_alias_b64    = Column(Text, nullable=True)   # キャスト名
 
     date_text     = Column(String(50),  nullable=True)
     oto_addr_text = Column(String(256), nullable=True)
@@ -105,7 +105,7 @@ class Girl(Base):
     id         = Column(Integer, primary_key=True, index=True)
     store_id   = Column(Integer, ForeignKey("stores.id"), nullable=False)
     real_name  = Column(String(64),  nullable=True)   # 本名
-    alias      = Column(String(64),  nullable=False)  # 源氏名
+    alias      = Column(String(64),  nullable=False)  # キャスト名
     address    = Column(String(256), nullable=True)   # 住所
     phone      = Column(String(32),  nullable=True)   # 電話番号
     is_active  = Column(Boolean, default=True)

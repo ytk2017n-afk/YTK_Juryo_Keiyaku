@@ -1,6 +1,6 @@
 /**
  * 手書きCanvas管理 - Apple Pencil / タッチ対応
- * 手書きフィールド: 本名(c_realname)、源氏名(c_alias)、署名(c_sig) の3箇所のみ
+ * 手書きフィールド: 本名(c_realname)、キャスト名(c_alias)、署名(c_sig) の3箇所のみ
  */
 
 let penSize  = 2;
