@@ -16,7 +16,11 @@ from pdf_generator import generate_receipt_pdf
 from contract_pdf_generator import generate_contract_pdf
 
 # ── 初期化 ─────────────────────────────────────────────────────────────────────
-init_db()
+_init_error = None
+try:
+    init_db()
+except Exception as _e:
+    _init_error = str(_e)
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 SECRET_KEY = os.getenv("SECRET_KEY", "ytk-receipt-secret-change-in-prod-2024")
@@ -40,6 +44,11 @@ def _generate_pdf_bytes(generator_fn, data: dict) -> bytes:
 
 app = FastAPI(title="受領書管理システム")
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+@app.get("/health")
+def health():
+    import os as _os
+    return {"status": "ok", "init_error": _init_error, "db_url": bool(_os.getenv("DATABASE_URL"))}
 templates  = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 pwd_ctx    = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 serializer = URLSafeTimedSerializer(SECRET_KEY)
