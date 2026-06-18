@@ -6,11 +6,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rl_canvas
 from reportlab.lib.colors import HexColor, white, black
 from reportlab.lib.utils import ImageReader
-from pypdf import PdfReader, PdfWriter
-from pypdf.generic import (
-    ArrayObject, DecodedStreamObject, DictionaryObject,
-    FloatObject, NameObject, NumberObject, TextStringObject,
-)
 
 # ── フォント ───────────────────────────────────────────────────────────────────
 _BASE      = os.path.dirname(os.path.abspath(__file__))
@@ -246,43 +241,19 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
 
     t(MX, 10, "※ 消費税率10%は固定　／　本書は受領の証として発行します", FR, 6.5, C_NOTE)
 
+    # AcroForm 署名フィールド（reportlab ネイティブ）
+    cv.acroForm.signatureField(
+        "signature",
+        tooltip="署名欄",
+        x=SFX, y=SFY,
+        width=SFW, height=SFH,
+        forceBorder=False,
+    )
+
     cv.showPage()
     cv.save()
 
-    # ── AcroForm 署名フィールド追加 ────────────────────────────────────────────
-    reader = PdfReader(tmp_path)
-    writer = PdfWriter()
-    writer.append(reader)
-    page = writer.pages[0]
-
-    ap_n = DecodedStreamObject()
-    ap_n.set_data(b"")
-    ap_n.update({
-        NameObject("/Type"):    NameObject("/XObject"),
-        NameObject("/Subtype"): NameObject("/Form"),
-        NameObject("/BBox"):    ArrayObject([FloatObject(0), FloatObject(0), FloatObject(SFW), FloatObject(SFH)]),
-    })
-    sig = DictionaryObject({
-        NameObject("/Type"):    NameObject("/Annot"),
-        NameObject("/Subtype"): NameObject("/Widget"),
-        NameObject("/FT"):      NameObject("/Sig"),
-        NameObject("/T"):       TextStringObject("signature"),
-        NameObject("/TU"):      TextStringObject("署名欄"),
-        NameObject("/F"):       NumberObject(4),
-        NameObject("/Rect"):    ArrayObject([FloatObject(SFX), FloatObject(SFY), FloatObject(SFX+SFW), FloatObject(SFY+SFH)]),
-        NameObject("/AP"):      DictionaryObject({NameObject("/N"): writer._add_object(ap_n)}),
-    })
-    sig_ref = writer._add_object(sig)
-    if "/Annots" not in page:
-        page[NameObject("/Annots")] = ArrayObject()
-    page[NameObject("/Annots")].append(sig_ref)
-    writer._root_object[NameObject("/AcroForm")] = DictionaryObject({
-        NameObject("/Fields"):   ArrayObject([sig_ref]),
-        NameObject("/SigFlags"): NumberObject(3),
-    })
-
-    with open(out_path, "wb") as f:
-        writer.write(f)
-
+    import shutil
+    shutil.copy(tmp_path, out_path)
     os.remove(tmp_path)
     return out_path
