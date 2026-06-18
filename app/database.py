@@ -1,12 +1,19 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, ForeignKey, LargeBinary
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime, timezone
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH  = os.path.join(BASE_DIR, "data", "receipts.db")
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine       = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+if DATABASE_URL:
+    # PostgreSQL (Supabase) — replace postgres:// with postgresql:// for SQLAlchemy
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    engine = create_engine(DATABASE_URL)
+else:
+    DB_PATH = os.path.join(BASE_DIR, "data", "receipts.db")
+    engine  = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base         = declarative_base()
 
@@ -21,12 +28,14 @@ class Store(Base):
     store_address = Column(String(256), nullable=True)        # 発行者：住所
     store_contact = Column(String(128), nullable=True)        # 発行者：連絡先
     invoice_no    = Column(String(20),  nullable=True)        # 発行者：インボイス登録番号
+    plain_password = Column(String(256), nullable=True)
     is_admin      = Column(Boolean, default=False)
     is_active     = Column(Boolean, default=True)
     created_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     receipts  = relationship("Receipt",  back_populates="store")
     contracts = relationship("Contract", back_populates="store")
+    girls     = relationship("Girl",     back_populates="store")
 
 
 class Receipt(Base):
@@ -41,7 +50,7 @@ class Receipt(Base):
     shop_name     = Column(String(128), nullable=True)   # 宛名・店舗名
 
     # ── 受取人情報
-    name_alias    = Column(String(64),  nullable=True)   # 源氏名
+    name_alias    = Column(String(64),  nullable=True)   # キャスト名
     name_real     = Column(String(64),  nullable=True)   # 本名
     address       = Column(Text,        nullable=True)   # 住所
 
@@ -58,6 +67,7 @@ class Receipt(Base):
 
     # ── メタ
     pdf_filename  = Column(String(256), nullable=True)
+    pdf_data      = Column(LargeBinary, nullable=True)
     submitted_at  = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
     is_deleted    = Column(Boolean,     default=False)
 
@@ -75,13 +85,33 @@ class Contract(Base):
     date_b64         = Column(Text, nullable=True)   # 日付
     oto_addr_b64     = Column(Text, nullable=True)   # 乙の住所
     oto_realname_b64 = Column(Text, nullable=True)   # 本名
-    oto_alias_b64    = Column(Text, nullable=True)   # 源氏名
+    oto_alias_b64    = Column(Text, nullable=True)   # キャスト名
+
+    date_text     = Column(String(50),  nullable=True)
+    oto_addr_text = Column(String(256), nullable=True)
+    oto_alias_text= Column(String(64),  nullable=True)
 
     pdf_filename = Column(String(256), nullable=True)
+    pdf_data     = Column(LargeBinary, nullable=True)
     submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     is_deleted   = Column(Boolean, default=False)
 
     store = relationship("Store", back_populates="contracts")
+
+
+class Girl(Base):
+    __tablename__ = "girls"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    store_id   = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    real_name  = Column(String(64),  nullable=True)   # 本名
+    alias      = Column(String(64),  nullable=False)  # キャスト名
+    address    = Column(String(256), nullable=True)   # 住所
+    phone      = Column(String(32),  nullable=True)   # 電話番号
+    is_active  = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    store = relationship("Store", back_populates="girls")
 
 
 def get_db():
@@ -93,5 +123,6 @@ def get_db():
 
 
 def init_db():
-    os.makedirs(os.path.join(BASE_DIR, "data", "pdfs"), exist_ok=True)
+    if not DATABASE_URL:
+        os.makedirs(os.path.join(BASE_DIR, "data", "pdfs"), exist_ok=True)
     Base.metadata.create_all(bind=engine)
