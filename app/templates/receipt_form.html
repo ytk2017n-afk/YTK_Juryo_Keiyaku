@@ -3,7 +3,6 @@
 
 {% block head %}
 <style>
-/* ── 受領書ドキュメントスタイル ─────────────────────── */
 .receipt-doc {
   max-width: 680px;
   margin: 0 auto 120px;
@@ -33,7 +32,7 @@
 .doc-row {
   display: flex;
   border-bottom: 1px solid #E0E0E0;
-  min-height: 60px;
+  min-height: 52px;
 }
 .doc-row:last-child { border-bottom: none; }
 .doc-label {
@@ -44,6 +43,35 @@
   border-right: 1px solid #C5CAE9;
   text-align: center; line-height: 1.4; padding: 4px 6px;
 }
+/* 入力式フィールド */
+.doc-input-wrap {
+  flex: 1;
+  background: #FFFDE7;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+.doc-text-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  color: #222;
+  outline: none;
+  padding: 4px 0;
+}
+.doc-text-input::placeholder { color: #bbb; }
+/* 自動計算表示 */
+.doc-auto-val {
+  flex: 1;
+  background: #F5F5F5;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 1rem;
+  color: #555;
+}
+/* 手書きCanvas */
 .canvas-wrap {
   flex: 1;
   position: relative;
@@ -51,6 +79,7 @@
   cursor: crosshair;
   overflow: hidden;
   touch-action: none;
+  min-height: 54px;
 }
 .canvas-wrap canvas {
   display: block;
@@ -67,37 +96,81 @@
 }
 .canvas-wrap:hover .clear-btn,
 .canvas-wrap:focus-within .clear-btn { opacity: 1; }
-
+/* 日付ピッカー */
+.date-picker-bar {
+  max-width: 680px;
+  margin: 12px auto 8px;
+  background: #E8EAF6;
+  border-radius: 10px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #C5CAE9;
+}
+.date-picker-bar label {
+  font-weight: 700;
+  color: #3F51B5;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.date-picker-bar input[type=date] {
+  border: 1.5px solid #C5CAE9;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  color: #222;
+  background: #fff;
+  outline: none;
+}
 /* 宛名 */
-.atena-row { min-height: 80px; }
-.doc-label.atena { background: #3F51B5; color: #fff; font-size: 1rem; width: 80px; min-width: 80px; }
+.atena-row { min-height: 68px; }
+.doc-label.atena { background: #3F51B5; color: #fff; font-size: 1rem; }
+.atena-name {
+  flex: 1;
+  background: #FFFDE7;
+  display: flex; align-items: center;
+  padding: 0 14px;
+  font-size: 1.2rem; font-weight: 700; color: #333;
+}
 .atena-sama {
-  background: #FFFDE7; display: flex; align-items: center;
-  padding: 0 14px; font-size: 1.4rem; font-weight: 700; color: #333;
+  background: #FFFDE7;
+  display: flex; align-items: center;
+  padding: 0 14px;
+  font-size: 1.4rem; font-weight: 700; color: #333;
   border-left: 1px solid #E0E0E0;
 }
-/* 金額 */
-.amount-row { min-height: 68px; }
+/* ¥ プレフィックス */
 .yen-prefix {
-  background: #FFFDE7; display: flex; align-items: center;
-  padding: 0 8px 0 12px; font-size: 1.3rem; font-weight: 700; color: #333;
+  background: #FFFDE7;
+  display: flex; align-items: center;
+  padding: 0 8px 0 12px;
+  font-size: 1.2rem; font-weight: 700; color: #333;
   border-right: 1px solid #E0E0E0;
 }
-.tax-fixed-row { min-height: 40px; }
+/* 金額行 */
+.amount-row { min-height: 60px; }
+.amount-row .doc-label { font-size: 0.95rem; font-weight: 700; }
+.amount-input { font-size: 1.3rem; font-weight: 700; }
+/* 消費税率 */
+.tax-fixed-row { min-height: 38px; }
 .tax-fixed-val { flex: 1; background: #F5F5F5; display: flex; align-items: center; padding: 0 14px; color: #555; font-size: 0.9rem; }
-.total-row { min-height: 68px; }
+/* 合計 */
+.total-row { min-height: 60px; }
 .total-row .doc-label { background: #3F51B5; color: #fff; font-size: 0.9rem; }
-.total-row .canvas-wrap { background: #EDE7F6; }
-.total-row .yen-prefix { background: #EDE7F6; color: #3F51B5; font-size: 1.4rem; }
+.total-val { background: #EDE7F6; font-size: 1.3rem; font-weight: 700; color: #3F51B5; }
+.total-row .yen-prefix { background: #EDE7F6; color: #3F51B5; }
 /* 発行者 */
 .issuer-wrap { display: flex; border-bottom: 1px solid #E0E0E0; }
 .issuer-left { flex: 1; }
 .issuer-stamp {
-  width: 80px; background: #FFF3E0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; border-left: 1px solid #E0E0E0;
+  width: 80px; background: #FFF3E0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border-left: 1px solid #E0E0E0;
   color: #BBBBBB; font-size: 0.75rem;
 }
-.issuer-row-fixed { display: flex; border-bottom: 1px solid #EEE; min-height: 34px; }
+.issuer-row-fixed { display: flex; border-bottom: 1px solid #EEE; min-height: 32px; }
 .issuer-row-fixed:last-child { border-bottom: none; }
 .issuer-lbl { width: 76px; background: #ECEFF1; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 600; color: #555; border-right: 1px solid #E0E0E0; text-align:center; }
 .issuer-val { flex: 1; display: flex; align-items: center; padding: 0 10px; font-size: 0.83rem; color: #333; }
@@ -138,8 +211,31 @@
 
 {% block content %}
 
+<!-- 日付ピッカー -->
+<div class="date-picker-bar sticky-top" style="top:56px;z-index:101">
+  <label for="receiptDate"><i class="bi bi-calendar3 me-1"></i>日付：</label>
+  <input type="date" id="receiptDate" value="{{ today_iso }}">
+</div>
+
+<!-- 女の子選択 -->
+{% if girls %}
+<div class="date-picker-bar" style="max-width:680px;margin:0 auto 8px;background:#E8F5E9;border-color:#A5D6A7">
+  <label style="color:#2E7D32;font-weight:700;white-space:nowrap"><i class="bi bi-person-fill me-1"></i>女の子：</label>
+  <select id="girlSelect" class="form-select form-select-sm" style="max-width:200px" onchange="fillGirlData()">
+    <option value="">-- 選択 --</option>
+    {% for g in girls %}
+    <option value="{{ g.id }}"
+            data-alias="{{ g.alias | e }}"
+            data-real-name="{{ g.real_name | e }}"
+            data-address="{{ g.address | e }}"
+            data-phone="{{ g.phone | e }}">{{ g.alias }}</option>
+    {% endfor %}
+  </select>
+</div>
+{% endif %}
+
 <!-- ペン設定ツールバー -->
-<div class="pen-toolbar sticky-top" style="top:56px;z-index:100;margin-top:8px">
+<div class="pen-toolbar sticky-top" style="top:110px;z-index:100">
   <span class="small fw-semibold text-muted">太さ:</span>
   <button class="pen-size-btn active" data-size="2" style="width:22px;height:22px" onclick="setPenSize(2,this)">
     <span style="width:5px;height:5px;border-radius:50%;background:#333;display:block"></span>
@@ -157,7 +253,7 @@
   <button class="color-btn" data-color="#B71C1C" style="background:#B71C1C" onclick="setPenColor('#B71C1C',this)" title="赤"></button>
   <div class="vr mx-1"></div>
   <button class="btn btn-sm btn-outline-danger py-1" onclick="clearAllFields()">
-    <i class="bi bi-eraser-fill"></i> 全消去
+    <i class="bi bi-eraser-fill"></i> 手書き消去
   </button>
   <span class="ms-auto small text-muted d-none d-sm-inline">
     <i class="bi bi-pencil me-1"></i>Apple Pencilで手書き入力
@@ -169,76 +265,42 @@
 
   <div class="doc-title">受　　領　　書</div>
 
-  <!-- 宛名 -->
+  <!-- 宛名（店舗名プリセット） -->
   <div class="doc-row atena-row">
     <div class="doc-label atena">宛　名</div>
-    <div class="canvas-wrap" data-height="80">
-      <canvas id="c_atena" data-field="atena"></canvas>
-      <button class="clear-btn" onclick="clearField('c_atena')">✕</button>
-    </div>
+    <div class="atena-name">{{ store.store_name }}</div>
     <div class="atena-sama">様</div>
-  </div>
-
-  <!-- 基本情報 -->
-  <div class="doc-sec"><i class="bi bi-info-circle me-1"></i>基本情報</div>
-
-  <div class="doc-row" data-row-height="54">
-    <div class="doc-label">日　　付</div>
-    <div class="canvas-wrap">
-      <canvas id="c_date" data-field="date"></canvas>
-      <button class="clear-btn" onclick="clearField('c_date')">✕</button>
-    </div>
-  </div>
-
-  <div class="doc-row" data-row-height="54">
-    <div class="doc-label">インボイス番号</div>
-    <div class="yen-prefix" style="font-size:1.1rem;padding:0 6px 0 10px">T</div>
-    <div class="canvas-wrap">
-      <canvas id="c_invoice" data-field="invoice"></canvas>
-      <button class="clear-btn" onclick="clearField('c_invoice')">✕</button>
-    </div>
-  </div>
-
-  <div class="doc-row" data-row-height="54">
-    <div class="doc-label">店　舗　名</div>
-    <div class="canvas-wrap">
-      <canvas id="c_shopname" data-field="shopname"></canvas>
-      <button class="clear-btn" onclick="clearField('c_shopname')">✕</button>
-    </div>
   </div>
 
   <!-- 受取人情報 -->
   <div class="doc-sec"><i class="bi bi-person me-1"></i>受取人情報</div>
 
-  <div class="doc-row" data-row-height="54">
-    <div class="doc-label">源 氏 名</div>
-    <div class="canvas-wrap">
-      <canvas id="c_alias" data-field="alias"></canvas>
-      <button class="clear-btn" onclick="clearField('c_alias')">✕</button>
-    </div>
-  </div>
-
-  <div class="doc-row" data-row-height="54">
-    <div class="doc-label">本　　名</div>
+  <div class="doc-row" style="min-height:60px">
+    <div class="doc-label" style="flex-direction:column;gap:2px"><div>氏　　名</div><div style="font-size:0.7rem;font-weight:400;color:#777">（手書き）</div></div>
     <div class="canvas-wrap">
       <canvas id="c_realname" data-field="realname"></canvas>
       <button class="clear-btn" onclick="clearField('c_realname')">✕</button>
     </div>
   </div>
 
-  <div class="doc-row" data-row-height="54">
-    <div class="doc-label">住　　所</div>
-    <div class="canvas-wrap">
-      <canvas id="c_addr1" data-field="addr1"></canvas>
-      <button class="clear-btn" onclick="clearField('c_addr1')">✕</button>
+  <div class="doc-row">
+    <div class="doc-label">源 氏 名</div>
+    <div class="doc-input-wrap">
+      <input type="text" id="inputAlias" class="doc-text-input" placeholder="キャスト名を入力">
     </div>
   </div>
 
-  <div class="doc-row" data-row-height="46">
-    <div class="doc-label" style="background:#ECEFF1;font-size:0.78rem">（続き）</div>
-    <div class="canvas-wrap" style="background:#FFFEF5">
-      <canvas id="c_addr2" data-field="addr2"></canvas>
-      <button class="clear-btn" onclick="clearField('c_addr2')">✕</button>
+  <div class="doc-row">
+    <div class="doc-label">住　　所</div>
+    <div class="doc-input-wrap">
+      <input type="text" id="inputAddress" class="doc-text-input" placeholder="〒000-0000 東京都…">
+    </div>
+  </div>
+
+  <div class="doc-row">
+    <div class="doc-label">電話番号</div>
+    <div class="doc-input-wrap">
+      <input type="tel" id="inputPhone" class="doc-text-input" placeholder="000-0000-0000" inputmode="tel">
     </div>
   </div>
 
@@ -248,9 +310,9 @@
   <div class="doc-row amount-row">
     <div class="doc-label" style="font-size:1rem;font-weight:700">金　　額</div>
     <div class="yen-prefix">¥</div>
-    <div class="canvas-wrap">
-      <canvas id="c_amount" data-field="amount"></canvas>
-      <button class="clear-btn" onclick="clearField('c_amount')">✕</button>
+    <div class="doc-input-wrap">
+      <input type="text" id="inputAmount" class="doc-text-input amount-input"
+             inputmode="numeric" placeholder="0" oninput="calcTax()">
     </div>
   </div>
 
@@ -259,32 +321,25 @@
     <div class="tax-fixed-val">10%（固定）</div>
   </div>
 
-  <div class="doc-row" data-row-height="54">
+  <div class="doc-row" style="min-height:44px">
     <div class="doc-label">消費税額</div>
-    <div class="yen-prefix" style="font-size:1.1rem">¥</div>
-    <div class="canvas-wrap">
-      <canvas id="c_tax" data-field="tax"></canvas>
-      <button class="clear-btn" onclick="clearField('c_tax')">✕</button>
-    </div>
+    <div class="yen-prefix" style="font-size:1rem">¥</div>
+    <div class="doc-auto-val" id="taxDisplay">―</div>
   </div>
 
   <div class="doc-row total-row amount-row">
     <div class="doc-label">合 計 金 額</div>
     <div class="yen-prefix">¥</div>
-    <div class="canvas-wrap">
-      <canvas id="c_total" data-field="total"></canvas>
-      <button class="clear-btn" onclick="clearField('c_total')">✕</button>
-    </div>
+    <div class="doc-auto-val total-val" id="totalDisplay">―</div>
   </div>
 
   <!-- 但し書 -->
   <div class="doc-sec"><i class="bi bi-chat-text me-1"></i>但し書</div>
 
-  <div class="doc-row" data-row-height="64">
+  <div class="doc-row" style="min-height:52px">
     <div class="doc-label">但 し 書</div>
-    <div class="canvas-wrap">
-      <canvas id="c_desc" data-field="desc"></canvas>
-      <button class="clear-btn" onclick="clearField('c_desc')">✕</button>
+    <div class="doc-input-wrap">
+      <input type="text" id="inputDesc" class="doc-text-input" placeholder="例：業務委託料として">
     </div>
   </div>
 
@@ -320,8 +375,8 @@
   <!-- 署名欄 -->
   <div class="doc-sec" style="background:#3F51B5"><i class="bi bi-vector-pen me-1"></i>署名欄</div>
   <div class="doc-row sig-row">
-    <div class="doc-label">署　名</div>
-    <div class="canvas-wrap" data-height="80">
+    <div class="doc-label" style="flex-direction:column;gap:2px"><div>署　名</div><div style="font-size:0.7rem;font-weight:400">（手書き）</div></div>
+    <div class="canvas-wrap" style="min-height:80px">
       <canvas id="c_sig" data-field="sig"></canvas>
       <button class="clear-btn" onclick="clearField('c_sig')">✕</button>
     </div>
@@ -349,4 +404,14 @@
 
 {% block scripts %}
 <script src="/static/js/handwriting.js"></script>
+<script>
+function fillGirlData() {
+  const sel = document.getElementById('girlSelect');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) return;
+  document.getElementById('inputAlias').value   = opt.dataset.alias   || '';
+  document.getElementById('inputAddress').value = opt.dataset.address || '';
+  document.getElementById('inputPhone').value   = opt.dataset.phone   || '';
+}
+</script>
 {% endblock %}

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
-from database import get_db, init_db, Store, Receipt, Contract
+from database import get_db, init_db, Store, Receipt, Contract, Girl
 from pdf_generator import generate_receipt_pdf
 from contract_pdf_generator import generate_contract_pdf
 
@@ -19,8 +19,24 @@ from contract_pdf_generator import generate_contract_pdf
 init_db()
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-PDF_DIR    = os.path.join(BASE_DIR, "data", "pdfs")
 SECRET_KEY = os.getenv("SECRET_KEY", "ytk-receipt-secret-change-in-prod-2024")
+
+
+def _generate_pdf_bytes(generator_fn, data: dict) -> bytes:
+    """PDFをメモリ上で生成してバイト列で返す"""
+    tmp = io.BytesIO()
+    import tempfile, os as _os
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+        tmp_path = f.name
+    try:
+        generator_fn(data, tmp_path)
+        with open(tmp_path, "rb") as f:
+            return f.read()
+    finally:
+        try:
+            _os.remove(tmp_path)
+        except Exception:
+            pass
 
 app = FastAPI(title="受領書管理システム")
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
@@ -92,11 +108,14 @@ async def logout():
 async def receipt_form(
     request: Request,
     store: Store = Depends(require_login),
+    db: Session = Depends(get_db),
 ):
+    girls = db.query(Girl).filter(Girl.store_id == store.id, Girl.is_active == True).order_by(Girl.alias).all()
     return templates.TemplateResponse("receipt_form.html", {
-        "request": request,
-        "store": store,
-        "today": datetime.now().strftime("%Y年%m月%d日"),
+        "request":   request,
+        "store":     store,
+        "girls":     girls,
+        "today_iso": datetime.now().strftime("%Y-%m-%d"),
     })
 
 @app.post("/receipt/submit-handwriting")
@@ -110,16 +129,16 @@ async def submit_handwriting(
 
     receipt = Receipt(
         store_id      = store.id,
-        shop_name     = "",   # 手書きなのでテキストなし
-        receipt_date  = "",
-        invoice_no    = "",
-        name_alias    = "",
-        name_real     = "",
-        address       = "",
-        amount        = "",
-        tax_amount    = "",
-        total_amount  = "",
-        description   = "",
+        shop_name     = store.store_name,
+        receipt_date  = fields.get("date", ""),
+        invoice_no    = store.invoice_no or "",
+        name_alias    = fields.get("alias", ""),
+        name_real     = "",   # 手書きのためテキスト取得不可
+        address       = fields.get("address", ""),
+        amount        = fields.get("amount", ""),
+        tax_amount    = fields.get("tax", ""),
+        total_amount  = fields.get("total", ""),
+        description   = fields.get("desc", ""),
         signature_b64 = fields.get("sig", ""),
     )
     db.add(receipt)
@@ -127,17 +146,26 @@ async def submit_handwriting(
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename  = f"receipt_{store.login_id}_{receipt.id}_{timestamp}.pdf"
-    pdf_path  = os.path.join(PDF_DIR, filename)
 
-    generate_receipt_pdf({
-        "fields":          fields,   # 手書き画像データ
+    pdf_bytes = _generate_pdf_bytes(generate_receipt_pdf, {
+        "fields":          fields,          # realname/alias/sig の canvas base64
+        "date_text":       fields.get("date", ""),
+        "atena":           store.store_name,
+        "alias":           fields.get("alias", ""),
+        "address":         fields.get("address", ""),
+        "phone":           fields.get("phone", ""),
+        "amount_text":     fields.get("amount", ""),
+        "tax_text":        fields.get("tax", ""),
+        "total_text":      fields.get("total", ""),
+        "desc":            fields.get("desc", ""),
         "store_name":      store.store_name,
         "store_address":   store.store_address or "",
         "store_contact":   store.store_contact or "",
         "store_invoice_no": store.invoice_no or "",
-    }, pdf_path)
+    })
 
     receipt.pdf_filename = filename
+    receipt.pdf_data     = pdf_bytes
     db.commit()
 
     return JSONResponse({"receipt_id": receipt.id, "pdf_url": f"/receipt/pdf/{receipt.id}"})
@@ -172,11 +200,13 @@ async def download_receipt_pdf(
     # 管理者 or 自店舗のみ
     if not store.is_admin and receipt.store_id != store.id:
         raise HTTPException(403)
-    path = os.path.join(PDF_DIR, receipt.pdf_filename)
-    if not os.path.exists(path):
-        raise HTTPException(404, "PDFファイルが見つかりません")
-    return FileResponse(path, media_type="application/pdf",
-                        filename=receipt.pdf_filename)
+    if not receipt.pdf_data:
+        raise HTTPException(404, "PDFデータが見つかりません")
+    return StreamingResponse(
+        io.BytesIO(receipt.pdf_data),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{receipt.pdf_filename}"'},
+    )
 
 # ── 管理者ダッシュボード ────────────────────────────────────────────────────────
 @app.get("/admin", response_class=HTMLResponse)
@@ -251,9 +281,8 @@ async def download_zip(
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for r in receipts:
-            path = os.path.join(PDF_DIR, r.pdf_filename)
-            if os.path.exists(path):
-                zf.write(path, r.pdf_filename)
+            if r.pdf_data:
+                zf.writestr(r.pdf_filename or f"receipt_{r.id}.pdf", r.pdf_data)
     buf.seek(0)
     fname = f"receipts_{datetime.now().strftime('%Y%m%d')}.zip"
     return StreamingResponse(buf, media_type="application/zip",
@@ -272,7 +301,7 @@ async def export_csv(
 
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["ID","店舗","日付","宛名(店舗名)","源氏名","本名","住所",
+    writer.writerow(["ID","店舗","日付","宛名(店舗名)","キャスト名","本名","住所",
                      "金額","消費税額","合計金額","但し書","提出日時"])
     for r in receipts:
         writer.writerow([
@@ -319,20 +348,35 @@ async def create_store(
     if db.query(Store).filter(Store.login_id == login_id).first():
         raise HTTPException(400, "そのログインIDは既に使われています")
     new_store = Store(
-        login_id      = login_id,
-        password_hash = pwd_ctx.hash(password),
-        store_name    = store_name,
-        store_address = store_address,
-        store_contact = store_contact,
-        invoice_no    = invoice_no,
+        login_id       = login_id,
+        password_hash  = pwd_ctx.hash(password),
+        plain_password = password,
+        store_name     = store_name,
+        store_address  = store_address,
+        store_contact  = store_contact,
+        invoice_no     = invoice_no,
     )
     db.add(new_store)
+    db.commit()
+    return RedirectResponse("/admin/stores", status_code=303)
+
+@app.post("/admin/stores/{store_id}/delete")
+async def delete_store(
+    store_id: int,
+    store: Store = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    target = db.query(Store).filter(Store.id == store_id, Store.is_admin == False).first()
+    if not target:
+        raise HTTPException(404)
+    db.delete(target)
     db.commit()
     return RedirectResponse("/admin/stores", status_code=303)
 
 @app.post("/admin/stores/{store_id}/update")
 async def update_store(
     store_id: int,
+    login_id:      str = Form(...),
     store_name:    str = Form(...),
     store_address: str = Form(""),
     store_contact: str = Form(""),
@@ -345,26 +389,222 @@ async def update_store(
     target = db.query(Store).filter(Store.id == store_id).first()
     if not target:
         raise HTTPException(404)
+    # login_id変更時の重複チェック
+    if login_id != target.login_id:
+        if db.query(Store).filter(Store.login_id == login_id).first():
+            raise HTTPException(400, "そのログインIDは既に使われています")
+        target.login_id = login_id
     target.store_name    = store_name
     target.store_address = store_address
     target.store_contact = store_contact
     target.invoice_no    = invoice_no
     target.is_active     = (is_active == "on")
     if new_password:
-        target.password_hash = pwd_ctx.hash(new_password)
+        target.password_hash  = pwd_ctx.hash(new_password)
+        target.plain_password = new_password
     db.commit()
     return RedirectResponse("/admin/stores", status_code=303)
+
+# ── 自店舗の提出済書類一覧（スタッフ用） ──────────────────────────────────────
+@app.get("/my-docs", response_class=HTMLResponse)
+async def my_docs(
+    request: Request,
+    tab:     str = "receipts",
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    receipts  = db.query(Receipt).filter(Receipt.store_id == store.id, Receipt.is_deleted == False).order_by(Receipt.submitted_at.desc()).all()
+    contracts = db.query(Contract).filter(Contract.store_id == store.id, Contract.is_deleted == False).order_by(Contract.submitted_at.desc()).all()
+    return templates.TemplateResponse("my_docs.html", {
+        "request":   request,
+        "store":     store,
+        "receipts":  receipts,
+        "contracts": contracts,
+        "tab":       tab,
+    })
+
+# ── 店舗別書類一覧 ────────────────────────────────────────────────────────────
+@app.get("/admin/stores/{store_id}/docs", response_class=HTMLResponse)
+async def store_docs(
+    store_id: int,
+    request:  Request,
+    tab:      str = "receipts",
+    store: Store = Depends(require_admin),
+    db: Session  = Depends(get_db),
+):
+    target = db.query(Store).filter(Store.id == store_id).first()
+    if not target:
+        raise HTTPException(404)
+    receipts  = db.query(Receipt).filter(Receipt.store_id == store_id, Receipt.is_deleted == False).order_by(Receipt.submitted_at.desc()).all()
+    contracts = db.query(Contract).filter(Contract.store_id == store_id, Contract.is_deleted == False).order_by(Contract.submitted_at.desc()).all()
+    return templates.TemplateResponse("admin/store_docs.html", {
+        "request":   request,
+        "store":     store,
+        "target":    target,
+        "receipts":  receipts,
+        "contracts": contracts,
+        "tab":       tab,
+    })
+
+@app.post("/admin/receipts/{receipt_id}/delete")
+async def delete_receipt(
+    receipt_id: int,
+    store: Store = Depends(require_admin),
+    db: Session  = Depends(get_db),
+):
+    r = db.query(Receipt).filter(Receipt.id == receipt_id).first()
+    if not r:
+        raise HTTPException(404)
+    store_id = r.store_id
+    r.is_deleted = True
+    db.commit()
+    return RedirectResponse(f"/admin/stores/{store_id}/docs?tab=receipts", status_code=303)
+
+@app.post("/admin/contracts/{contract_id}/delete")
+async def delete_contract(
+    contract_id: int,
+    store: Store = Depends(require_admin),
+    db: Session  = Depends(get_db),
+):
+    c = db.query(Contract).filter(Contract.id == contract_id).first()
+    if not c:
+        raise HTTPException(404)
+    store_id = c.store_id
+    c.is_deleted = True
+    db.commit()
+    return RedirectResponse(f"/admin/stores/{store_id}/docs?tab=contracts", status_code=303)
+
+@app.post("/my-docs/receipts/{receipt_id}/delete")
+async def my_delete_receipt(
+    receipt_id: int,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    r = db.query(Receipt).filter(Receipt.id == receipt_id, Receipt.store_id == store.id).first()
+    if not r:
+        raise HTTPException(404)
+    r.is_deleted = True
+    db.commit()
+    return RedirectResponse("/my-docs?tab=receipts", status_code=303)
+
+@app.post("/my-docs/contracts/{contract_id}/delete")
+async def my_delete_contract(
+    contract_id: int,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    c = db.query(Contract).filter(Contract.id == contract_id, Contract.store_id == store.id).first()
+    if not c:
+        raise HTTPException(404)
+    c.is_deleted = True
+    db.commit()
+    return RedirectResponse("/my-docs?tab=contracts", status_code=303)
+
+# ── 女の子管理 ────────────────────────────────────────────────────────────────
+@app.get("/girls", response_class=HTMLResponse)
+async def girls_list(
+    request: Request,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    girls = db.query(Girl).filter(Girl.store_id == store.id).order_by(Girl.alias).all()
+
+    # キャスト名ごとの提出件数を集計
+    receipt_counts = {}
+    contract_counts = {}
+    for g in girls:
+        receipt_counts[g.id] = db.query(Receipt).filter(
+            Receipt.store_id == store.id,
+            Receipt.name_alias == g.alias,
+            Receipt.is_deleted == False,
+        ).count()
+        contract_counts[g.id] = db.query(Contract).filter(
+            Contract.store_id == store.id,
+            Contract.oto_alias_text == g.alias,
+            Contract.is_deleted == False,
+        ).count()
+
+    return templates.TemplateResponse("girls.html", {
+        "request":         request,
+        "store":           store,
+        "girls":           girls,
+        "receipt_counts":  receipt_counts,
+        "contract_counts": contract_counts,
+    })
+
+@app.post("/girls/create")
+async def girl_create(
+    alias:     str = Form(...),
+    real_name: str = Form(""),
+    address:   str = Form(""),
+    phone:     str = Form(""),
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    g = Girl(store_id=store.id, alias=alias, real_name=real_name or None, address=address or None, phone=phone or None)
+    db.add(g)
+    db.commit()
+    return RedirectResponse("/girls", status_code=303)
+
+@app.post("/girls/{girl_id}/update")
+async def girl_update(
+    girl_id:   int,
+    alias:     str = Form(...),
+    real_name: str = Form(""),
+    address:   str = Form(""),
+    phone:     str = Form(""),
+    is_active: str = Form(""),
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    g = db.query(Girl).filter(Girl.id == girl_id, Girl.store_id == store.id).first()
+    if not g:
+        raise HTTPException(404)
+    g.alias     = alias
+    g.real_name = real_name or None
+    g.address   = address or None
+    g.phone     = phone or None
+    g.is_active = (is_active == "on")
+    db.commit()
+    return RedirectResponse("/girls", status_code=303)
+
+@app.post("/girls/{girl_id}/delete")
+async def girl_delete(
+    girl_id: int,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    g = db.query(Girl).filter(Girl.id == girl_id, Girl.store_id == store.id).first()
+    if not g:
+        raise HTTPException(404)
+    db.delete(g)
+    db.commit()
+    return RedirectResponse("/girls", status_code=303)
+
+@app.get("/girls/{girl_id}/json")
+async def girl_json(
+    girl_id: int,
+    store: Store = Depends(require_login),
+    db: Session  = Depends(get_db),
+):
+    g = db.query(Girl).filter(Girl.id == girl_id, Girl.store_id == store.id).first()
+    if not g:
+        raise HTTPException(404)
+    return JSONResponse({"alias": g.alias or "", "real_name": g.real_name or "", "address": g.address or "", "phone": g.phone or ""})
 
 # ── 契約書フォーム（店舗スタッフ） ─────────────────────────────────────────────
 @app.get("/contract", response_class=HTMLResponse)
 async def contract_form(
     request: Request,
     store: Store = Depends(require_login),
+    db: Session = Depends(get_db),
 ):
+    girls = db.query(Girl).filter(Girl.store_id == store.id, Girl.is_active == True).order_by(Girl.alias).all()
     return templates.TemplateResponse("contract_form.html", {
-        "request": request,
-        "store":   store,
-        "today":   datetime.now().strftime("%Y年%m月%d日"),
+        "request":   request,
+        "store":     store,
+        "girls":     girls,
+        "today_iso": datetime.now().strftime("%Y-%m-%d"),
     })
 
 
@@ -380,29 +620,28 @@ async def submit_contract(
     contract = Contract(
         store_id         = store.id,
         oto_preamble_b64 = fields.get("oto_preamble", ""),
-        date_b64         = fields.get("date", ""),
-        oto_addr_b64     = fields.get("oto_addr", ""),
         oto_realname_b64 = fields.get("oto_realname", ""),
-        oto_alias_b64    = fields.get("oto_alias", ""),
+        date_text        = fields.get("date", ""),
+        oto_addr_text    = fields.get("oto_addr", ""),
+        oto_alias_text   = fields.get("oto_alias", ""),
     )
     db.add(contract)
     db.flush()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # 店舗別フォルダに格納
-    store_dir   = os.path.join(PDF_DIR, f"store_{store.id}")
-    os.makedirs(store_dir, exist_ok=True)
-    filename    = f"contract_{store.login_id}_{contract.id}_{timestamp}.pdf"
-    rel_path    = os.path.join(f"store_{store.id}", filename)
-    pdf_path    = os.path.join(PDF_DIR, rel_path)
+    filename  = f"contract_{store.login_id}_{contract.id}_{timestamp}.pdf"
 
-    generate_contract_pdf({
+    pdf_bytes = _generate_pdf_bytes(generate_contract_pdf, {
         "fields":        fields,
+        "date_text":     fields.get("date", ""),
+        "oto_addr":      fields.get("oto_addr", ""),
+        "oto_alias":     fields.get("oto_alias", ""),
         "store_name":    store.store_name,
         "store_address": store.store_address or "",
-    }, pdf_path)
+    })
 
-    contract.pdf_filename = rel_path
+    contract.pdf_filename = filename
+    contract.pdf_data     = pdf_bytes
     db.commit()
 
     return JSONResponse({"contract_id": contract.id, "pdf_url": f"/contract/pdf/{contract.id}"})
@@ -439,11 +678,13 @@ async def download_contract_pdf(
         raise HTTPException(404, "契約書が見つかりません")
     if not store.is_admin and contract.store_id != store.id:
         raise HTTPException(403)
-    path = os.path.join(PDF_DIR, contract.pdf_filename)
-    if not os.path.exists(path):
-        raise HTTPException(404, "PDFファイルが見つかりません")
-    return FileResponse(path, media_type="application/pdf",
-                        filename=os.path.basename(contract.pdf_filename))
+    if not contract.pdf_data:
+        raise HTTPException(404, "PDFデータが見つかりません")
+    return StreamingResponse(
+        io.BytesIO(contract.pdf_data),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{os.path.basename(contract.pdf_filename)}"'},
+    )
 
 
 # ── 管理者：契約書一覧 ─────────────────────────────────────────────────────────
@@ -491,9 +732,9 @@ async def download_contracts_zip(
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for c in contracts:
-            path = os.path.join(PDF_DIR, c.pdf_filename)
-            if os.path.exists(path):
-                zf.write(path, os.path.basename(c.pdf_filename))
+            if c.pdf_data:
+                name = os.path.basename(c.pdf_filename) if c.pdf_filename else f"contract_{c.id}.pdf"
+                zf.writestr(name, c.pdf_data)
     buf.seek(0)
     fname = f"contracts_{datetime.now().strftime('%Y%m%d')}.zip"
     return StreamingResponse(buf, media_type="application/zip",
