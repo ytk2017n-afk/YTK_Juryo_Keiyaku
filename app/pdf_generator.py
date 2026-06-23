@@ -172,7 +172,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
 
     # ── 受取人情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 受取人情報")
-    cur -= RH; row(MX, cur, CW, RH, "源 氏 名", "alias")
+    cur -= RH; row(MX, cur, CW, RH, "キャスト名", "alias")
     cur -= RH; row(MX, cur, CW, RH, "本　　名", "realname")
     cur -= RH; row(MX, cur, CW, RH, "住　　所", "addr1")
     RA = 38   # 続き行
