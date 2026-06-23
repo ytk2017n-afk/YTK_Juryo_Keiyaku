@@ -225,17 +225,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     fr(MX+sig_lw,   SIG_Y, CW-sig_lw, SIG_H, C_INP, black, 1.5)
     _draw_field_image(cv, fields.get("sig",""), MX+sig_lw, SIG_Y, CW-sig_lw, SIG_H)
 
-    SFX, SFY, SFW, SFH = MX+sig_lw, SIG_Y, CW-sig_lw, SIG_H
-
     t(MX, 10, "※ 消費税率10%は固定　／　本書は受領の証として発行します", FR, 6.5, C_NOTE)
-
-    cv.acroForm.signatureField(
-        "signature",
-        tooltip="署名欄",
-        x=SFX, y=SFY,
-        width=SFW, height=SFH,
-        forceBorder=False,
-    )
 
     cv.showPage()
     cv.save()
