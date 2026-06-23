@@ -51,6 +51,20 @@ def _draw_field_image(cv, b64: str, x: float, y: float, w: float, h: float):
         pass
 
 
+def _draw_field_value(cv, val: str, x: float, y: float, w: float, h: float, font="JR", fs=10):
+    """画像またはテキストを描画する（どちらも対応）"""
+    if not val:
+        return
+    if val.startswith("data:image"):
+        _draw_field_image(cv, val, x, y, w, h)
+    else:
+        cv.saveState()
+        cv.setFont(font, fs)
+        cv.setFillColor(black)
+        cv.drawString(x + 6, y + h / 2 - fs * 0.38, str(val))
+        cv.restoreState()
+
+
 def generate_receipt_pdf(data: dict, out_path: str) -> str:
     """
     data キー:
@@ -64,7 +78,23 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     MX   = 30
     CW   = W - MX * 2
 
-    fields   = data.get("fields", {})
+    raw      = data.get("fields", {})
+    # フィールド名を正規化（JSが送るキー名をPDFのキー名に統一）
+    fields = {
+        "atena":    raw.get("atena",    data.get("store_name", "")),
+        "date":     raw.get("date",     ""),
+        "invoice":  raw.get("invoice",  data.get("store_invoice_no", "")),
+        "shopname": raw.get("shopname", data.get("store_name", "")),
+        "alias":    raw.get("alias",    ""),
+        "realname": raw.get("realname", ""),
+        "addr1":    raw.get("addr1",    raw.get("address", "")),
+        "addr2":    raw.get("addr2",    ""),
+        "amount":   raw.get("amount",   ""),
+        "tax":      raw.get("tax",      ""),
+        "total":    raw.get("total",    ""),
+        "desc":     raw.get("desc",     ""),
+        "sig":      raw.get("sig",      ""),
+    }
     tmp_path = out_path + ".base.pdf"
     cv       = rl_canvas.Canvas(tmp_path, pagesize=A4)
     cv.setTitle("受領書")
@@ -105,10 +135,10 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
             fr(px, y, prefix_w, h, vf, black, lw)
             t(px+prefix_w/2, y+h/2-9*0.4, prefix, FB, 11, black, "center")
             px += prefix_w
-        # 入力エリア（手書き画像）
+        # 入力エリア（手書き画像またはテキスト）
         vw = w - (px - x)
         fr(px, y, vw, h, vf, black, lw)
-        _draw_field_image(cv, fields.get(field_key,""), px, y, vw, h)
+        _draw_field_value(cv, fields.get(field_key,""), px, y, vw, h, font=FR, fs=10)
         # サフィックス
         if suffix:
             t(x+w-14, y+h/2-9*0.4, suffix, FB, 12, black)
@@ -133,7 +163,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     fr(MX,             cur, ALW,          AH, C_HDR, black, 1.5)
     t(MX+ALW/2,        cur+AH/2-7, "宛　名", FB, 11, white, "center")
     fr(MX+ALW,         cur, CW-ALW-SAMA_W, AH, C_INP, black, 1.5)
-    _draw_field_image(cv, fields.get("atena",""), MX+ALW, cur, CW-ALW-SAMA_W, AH)
+    _draw_field_value(cv, fields.get("atena",""), MX+ALW, cur, CW-ALW-SAMA_W, AH, font=FB, fs=14)
     fr(MX+CW-SAMA_W,   cur, SAMA_W, AH, C_INP, black, 1.5)
     t(MX+CW-SAMA_W/2,  cur+AH/2-8, "様", FB, 13, black, "center")
 
@@ -167,7 +197,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+LBL_W+PREW/2, cur+RLG/2-8, "¥", FB, 13, black, "center")
     vx = MX+LBL_W+PREW; vw = CW-LBL_W-PREW
     fr(vx, cur, vw, RLG, C_INP, black, 1.2)
-    _draw_field_image(cv, fields.get("amount",""), vx, cur, vw, RLG)
+    _draw_field_value(cv, fields.get("amount",""), vx, cur, vw, RLG, font=FB, fs=16)
 
     # 消費税率固定
     RS = 34
@@ -187,7 +217,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     fr(MX+LBL_W,  cur, PREW, RLG, C_TOT_V, black, 1.5)
     t(MX+LBL_W+PREW/2, cur+RLG/2-9, "¥", FB, 14, C_HDR, "center")
     fr(MX+LBL_W+PREW, cur, CW-LBL_W-PREW, RLG, C_TOT_V, black, 1.5)
-    _draw_field_image(cv, fields.get("total",""), MX+LBL_W+PREW, cur, CW-LBL_W-PREW, RLG)
+    _draw_field_value(cv, fields.get("total",""), MX+LBL_W+PREW, cur, CW-LBL_W-PREW, RLG, font=FB, fs=16)
 
     # ── 但し書 ──────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 但し書")
@@ -223,7 +253,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     fr(MX,          SIG_Y, sig_lw,    SIG_H, C_HDR, black, 1.5)
     t(MX+sig_lw/2,  SIG_Y+SIG_H/2-5, "署　名", FB, 9, white, "center")
     fr(MX+sig_lw,   SIG_Y, CW-sig_lw, SIG_H, C_INP, black, 1.5)
-    _draw_field_image(cv, fields.get("sig",""), MX+sig_lw, SIG_Y, CW-sig_lw, SIG_H)
+    _draw_field_value(cv, fields.get("sig",""), MX+sig_lw, SIG_Y, CW-sig_lw, SIG_H)
 
     t(MX, 10, "※ 消費税率10%は固定　／　本書は受領の証として発行します", FR, 6.5, C_NOTE)
 
