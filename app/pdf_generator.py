@@ -168,14 +168,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+CW-SAMA_W/2,  cur+AH/2-8, "様", FB, 13, black, "center")
 
     SH = 15   # セクション見出し高さ
-    G  = 0    # セクション間ギャップ（詰める）
-
-    # ── 基本情報 ────────────────────────────────────────────────────────────────
     RH = 46   # 通常行高
-    cur = sec(MX, cur-SH, CW, SH, "■ 基本情報")
-    cur -= RH; row(MX, cur, CW, RH, "日　　付",     "date")
-    cur -= RH; row(MX, cur, CW, RH, "インボイス番号","invoice", prefix="T", prefix_w=16)
-    cur -= RH; row(MX, cur, CW, RH, "店　舗　名",   "shopname")
 
     # ── 受取人情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 受取人情報")
