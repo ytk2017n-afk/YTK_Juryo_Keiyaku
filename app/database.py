@@ -9,7 +9,12 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     # PostgreSQL (Supabase) — replace postgres:// with postgresql:// for SQLAlchemy
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    engine = create_engine(DATABASE_URL)
+    # Supavisor transaction pooler requires prepared statements to be disabled
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"prepare_threshold": None},
+        pool_pre_ping=True,
+    )
 else:
     DB_PATH = os.path.join(BASE_DIR, "data", "receipts.db")
     engine  = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
