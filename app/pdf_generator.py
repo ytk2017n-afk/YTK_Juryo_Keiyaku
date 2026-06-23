@@ -8,8 +8,9 @@ from reportlab.lib.colors import HexColor, white, black
 from reportlab.lib.utils import ImageReader
 
 # ── フォント ───────────────────────────────────────────────────────────────────
-_FONT_REG  = "/Library/Fonts/ipaexg.ttf"
-_FONT_BOLD = os.path.expanduser("~/Library/Fonts/ZenKakuGothicNew-Bold.ttf")
+_BASE      = os.path.dirname(os.path.abspath(__file__))
+_FONT_REG  = os.path.join(_BASE, "static", "fonts", "ipaexg.ttf")
+_FONT_BOLD = os.path.join(_BASE, "static", "fonts", "ZenKakuGothicNew-Bold.ttf")
 _fonts_ok  = False
 
 def _ensure_fonts():
