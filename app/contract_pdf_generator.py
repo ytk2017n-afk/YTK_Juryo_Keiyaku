@@ -271,7 +271,7 @@ def generate_contract_pdf(data: dict, out_path: str) -> str:
     story.append(SP(1))
     story.append(HandwritingField(fields.get("oto_realname", ""), "氏名（本名）", height=13*mm))
     story.append(SP(1))
-    story.append(AutoField(oto_alias, "源 氏 名",    height=11*mm))
+    story.append(AutoField(oto_alias, "キャスト名",    height=11*mm))
     story.append(SP(1))
     story.append(HandwritingField(fields.get("oto_sig", ""), "署　　名", height=14*mm))
 
