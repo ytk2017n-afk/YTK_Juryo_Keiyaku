@@ -210,7 +210,7 @@ async def download_receipt_pdf(
     if not store.is_admin and receipt.store_id != store.id:
         raise HTTPException(403)
     if not receipt.pdf_data:
-        raise HTTPException(404, "PDFデータが見つかりません")
+        return HTMLResponse("<html><body style='font-family:sans-serif;padding:40px'><h2>PDFが見つかりません</h2><p>このデータは旧システムから移行されたためPDFを表示できません。</p><a href='/my-docs'>戻る</a></body></html>", status_code=404)
     return StreamingResponse(
         io.BytesIO(receipt.pdf_data),
         media_type="application/pdf",
@@ -688,7 +688,7 @@ async def download_contract_pdf(
     if not store.is_admin and contract.store_id != store.id:
         raise HTTPException(403)
     if not contract.pdf_data:
-        raise HTTPException(404, "PDFデータが見つかりません")
+        return HTMLResponse("<html><body style='font-family:sans-serif;padding:40px'><h2>PDFが見つかりません</h2><p>このデータは旧システムから移行されたためPDFを表示できません。</p><a href='/my-docs'>戻る</a></body></html>", status_code=404)
     return StreamingResponse(
         io.BytesIO(contract.pdf_data),
         media_type="application/pdf",
