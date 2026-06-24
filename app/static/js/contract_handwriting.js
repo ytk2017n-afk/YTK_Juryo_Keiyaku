@@ -134,7 +134,10 @@ function isCanvasEmpty(canvas) {
 }
 
 // ── 送信処理 ─────────────────────────────────────────────────────────────────
+let _submitting = false;
 async function submitContract() {
+  if (_submitting) return;
+  _submitting = true;
   const overlay = document.getElementById('loadingOverlay');
   overlay.style.display = 'flex';
 
@@ -168,10 +171,12 @@ async function submitContract() {
       const data = await res.json();
       window.location.href = `/contract/complete/${data.contract_id}`;
     } else {
+      _submitting = false;
       overlay.style.display = 'none';
       alert('送信に失敗しました。\n' + await res.text());
     }
   } catch (e) {
+    _submitting = false;
     overlay.style.display = 'none';
     alert('通信エラーが発生しました。\nネットワーク接続を確認してください。');
   }
