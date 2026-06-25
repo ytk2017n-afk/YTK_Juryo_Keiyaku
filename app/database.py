@@ -1,6 +1,9 @@
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, ForeignKey, LargeBinary
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+_JST = timezone(timedelta(hours=9))
+def _now_jst(): return datetime.now(_JST)
 import os
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
@@ -36,7 +39,7 @@ class Store(Base):
     plain_password = Column(String(256), nullable=True)
     is_admin      = Column(Boolean, default=False)
     is_active     = Column(Boolean, default=True)
-    created_at    = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at    = Column(DateTime, default=_now_jst)
 
     receipts  = relationship("Receipt",  back_populates="store")
     contracts = relationship("Contract", back_populates="store")
@@ -73,7 +76,7 @@ class Receipt(Base):
     # ── メタ
     pdf_filename  = Column(String(256), nullable=True)
     pdf_data      = Column(LargeBinary, nullable=True)
-    submitted_at  = Column(DateTime,    default=lambda: datetime.now(timezone.utc))
+    submitted_at  = Column(DateTime,    default=_now_jst)
     is_deleted    = Column(Boolean,     default=False)
 
     store = relationship("Store", back_populates="receipts")
@@ -98,7 +101,7 @@ class Contract(Base):
 
     pdf_filename = Column(String(256), nullable=True)
     pdf_data     = Column(LargeBinary, nullable=True)
-    submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    submitted_at = Column(DateTime, default=_now_jst)
     is_deleted   = Column(Boolean, default=False)
 
     store = relationship("Store", back_populates="contracts")
@@ -114,7 +117,7 @@ class Girl(Base):
     address    = Column(String(256), nullable=True)   # 住所
     phone      = Column(String(32),  nullable=True)   # 電話番号
     is_active  = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=_now_jst)
 
     store = relationship("Store", back_populates="girls")
 

@@ -1,6 +1,9 @@
 """受領書Webアプリ - FastAPI メインモジュール"""
 import os, io, zipfile, csv
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+JST = timezone(timedelta(hours=9))
+def now_jst(): return datetime.now(JST)
 from typing import Optional
 
 from fastapi import FastAPI, Request, Form, Depends, HTTPException, Response
@@ -124,7 +127,7 @@ async def receipt_form(
         "request":   request,
         "store":     store,
         "girls":     girls,
-        "today_iso": datetime.now().strftime("%Y-%m-%d"),
+        "today_iso": now_jst().strftime("%Y-%m-%d"),
     })
 
 @app.post("/receipt/submit-handwriting")
@@ -153,7 +156,7 @@ async def submit_handwriting(
     db.add(receipt)
     db.flush()
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = now_jst().strftime("%Y%m%d_%H%M%S")
     filename  = f"receipt_{store.login_id}_{receipt.id}_{timestamp}.pdf"
 
     pdf_bytes = _generate_pdf_bytes(generate_receipt_pdf, {
@@ -299,7 +302,7 @@ async def download_zip(
             if r.pdf_data:
                 zf.writestr(r.pdf_filename or f"receipt_{r.id}.pdf", r.pdf_data)
     buf.seek(0)
-    fname = f"receipts_{datetime.now().strftime('%Y%m%d')}.zip"
+    fname = f"receipts_{now_jst().strftime('%Y%m%d')}.zip"
     return StreamingResponse(buf, media_type="application/zip",
                              headers={"Content-Disposition": f"attachment; filename={fname}"})
 
@@ -327,7 +330,7 @@ async def export_csv(
             r.submitted_at.strftime("%Y-%m-%d %H:%M") if r.submitted_at else "",
         ])
     buf.seek(0)
-    fname = f"receipts_{datetime.now().strftime('%Y%m%d')}.csv"
+    fname = f"receipts_{now_jst().strftime('%Y%m%d')}.csv"
     return StreamingResponse(
         io.BytesIO(buf.getvalue().encode("utf-8-sig")),
         media_type="text/csv",
@@ -622,7 +625,7 @@ async def contract_form(
         "request":   request,
         "store":     store,
         "girls":     girls,
-        "today_iso": datetime.now().strftime("%Y-%m-%d"),
+        "today_iso": now_jst().strftime("%Y-%m-%d"),
     })
 
 
@@ -646,7 +649,7 @@ async def submit_contract(
     db.add(contract)
     db.flush()
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = now_jst().strftime("%Y%m%d_%H%M%S")
     filename  = f"contract_{store.login_id}_{contract.id}_{timestamp}.pdf"
 
     pdf_bytes = _generate_pdf_bytes(generate_contract_pdf, {
@@ -755,7 +758,7 @@ async def download_contracts_zip(
                 name = os.path.basename(c.pdf_filename) if c.pdf_filename else f"contract_{c.id}.pdf"
                 zf.writestr(name, c.pdf_data)
     buf.seek(0)
-    fname = f"contracts_{datetime.now().strftime('%Y%m%d')}.zip"
+    fname = f"contracts_{now_jst().strftime('%Y%m%d')}.zip"
     return StreamingResponse(buf, media_type="application/zip",
                              headers={"Content-Disposition": f"attachment; filename={fname}"})
 
