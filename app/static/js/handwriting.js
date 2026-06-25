@@ -157,9 +157,17 @@ async function submitReceipt() {
   const amountRaw = document.getElementById('inputAmount').value.replace(/[,，¥\s]/g, '');
   const amount    = parseFloat(amountRaw) || 0;
 
+  const sigCanvas = document.getElementById('c_sig');
+  const sigEmpty  = !sigCanvas || isCanvasEmpty(sigCanvas);
+
   if (!alias) {
     alert('キャスト名を入力してください。');
     document.getElementById('inputAlias').focus();
+    return;
+  }
+  if (sigEmpty) {
+    alert('署名を手書きしてください。');
+    sigCanvas && sigCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
   if (amount <= 0) {

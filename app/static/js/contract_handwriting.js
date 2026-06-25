@@ -137,6 +137,22 @@ function isCanvasEmpty(canvas) {
 let _submitting = false;
 async function submitContract() {
   if (_submitting) return;
+
+  const alias    = document.getElementById('inputOtoAlias').value.trim();
+  const sigCanvas = document.getElementById('c_oto_sig');
+  const sigEmpty  = !sigCanvas || isCanvasEmpty(sigCanvas);
+
+  if (!alias) {
+    alert('キャスト名を入力してください。');
+    document.getElementById('inputOtoAlias').focus();
+    return;
+  }
+  if (sigEmpty) {
+    alert('署名を手書きしてください。');
+    sigCanvas && sigCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
   _submitting = true;
   const overlay = document.getElementById('loadingOverlay');
   overlay.style.display = 'flex';
