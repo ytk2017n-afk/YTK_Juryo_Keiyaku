@@ -230,12 +230,17 @@ async def admin_dashboard(
                .filter(Receipt.is_deleted == False)
                .order_by(Receipt.submitted_at.desc())
                .limit(10).all())
+    recent_contracts = (db.query(Contract)
+               .filter(Contract.is_deleted == False)
+               .order_by(Contract.submitted_at.desc())
+               .limit(10).all())
     return templates.TemplateResponse("admin/dashboard.html", {
-        "request":       request,
-        "store":         store,
-        "total_receipts": total_receipts,
-        "total_stores":   total_stores,
-        "recent":         recent,
+        "request":          request,
+        "store":            store,
+        "total_receipts":   total_receipts,
+        "total_stores":     total_stores,
+        "recent":           recent,
+        "recent_contracts": recent_contracts,
     })
 
 @app.get("/admin/receipts", response_class=HTMLResponse)

@@ -50,12 +50,12 @@
 </div>
 
 <!-- 最新受領書 -->
-<div class="card shadow-sm">
+<div class="card shadow-sm mb-4">
   <div class="card-header fw-semibold bg-white">
     <i class="bi bi-clock-history me-2"></i>最新の受領書
   </div>
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover align-middle mb-0 small">
       <thead class="table-light">
         <tr>
           <th>#</th><th>店舗</th><th>宛名</th><th>キャスト名</th>
@@ -65,18 +65,28 @@
       <tbody>
         {% for r in recent %}
         <tr>
-          <td class="text-muted small">{{ r.id }}</td>
+          <td class="text-muted">{{ r.id }}</td>
           <td><span class="badge bg-primary-subtle text-primary">{{ r.store.store_name if r.store else "―" }}</span></td>
           <td>{{ r.shop_name or "―" }} 様</td>
           <td>{{ r.name_alias or "―" }}</td>
           <td class="fw-semibold">{% if r.total_amount %}¥ {{ r.total_amount }}{% else %}―{% endif %}</td>
-          <td class="text-muted small">{{ r.submitted_at.strftime("%m/%d %H:%M") if r.submitted_at else "―" }}</td>
-          <td>
-            {% if r.pdf_filename %}
+          <td class="text-muted">{{ r.submitted_at.strftime("%m/%d %H:%M") if r.submitted_at else "―" }}</td>
+          <td class="d-flex gap-1">
+            {% if r.pdf_data %}
             <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
-              <i class="bi bi-file-pdf"></i>
+              <i class="bi bi-file-pdf-fill me-1"></i>閲覧
             </a>
+            {% else %}
+            <button class="btn btn-sm btn-outline-secondary" disabled>
+              <i class="bi bi-file-pdf-fill me-1"></i>閲覧
+            </button>
             {% endif %}
+            <form method="post" action="/admin/receipts/{{ r.id }}/delete"
+                  onsubmit="return confirm('受領書 #{{ r.id }} を削除しますか？')">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash me-1"></i>削除
+              </button>
+            </form>
           </td>
         </tr>
         {% else %}
@@ -87,6 +97,54 @@
   </div>
   <div class="card-footer text-end bg-white">
     <a href="/admin/receipts" class="btn btn-sm btn-outline-primary">すべて見る <i class="bi bi-arrow-right"></i></a>
+  </div>
+</div>
+
+<!-- 最新契約書 -->
+<div class="card shadow-sm">
+  <div class="card-header fw-semibold bg-white">
+    <i class="bi bi-file-earmark-text me-2"></i>最新の契約書
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 small">
+      <thead class="table-light">
+        <tr>
+          <th>#</th><th>店舗</th><th>キャスト名</th><th>提出日時</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in recent_contracts %}
+        <tr>
+          <td class="text-muted">{{ c.id }}</td>
+          <td><span class="badge bg-primary-subtle text-primary">{{ c.store.store_name if c.store else "―" }}</span></td>
+          <td>{{ c.oto_alias_text or "―" }}</td>
+          <td class="text-muted">{{ c.submitted_at.strftime("%m/%d %H:%M") if c.submitted_at else "―" }}</td>
+          <td class="d-flex gap-1">
+            {% if c.pdf_data %}
+            <a href="/contract/pdf/{{ c.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-file-pdf-fill me-1"></i>閲覧
+            </a>
+            {% else %}
+            <button class="btn btn-sm btn-outline-secondary" disabled>
+              <i class="bi bi-file-pdf-fill me-1"></i>閲覧
+            </button>
+            {% endif %}
+            <form method="post" action="/admin/contracts/{{ c.id }}/delete"
+                  onsubmit="return confirm('契約書 #{{ c.id }} を削除しますか？')">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash me-1"></i>削除
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">契約書がまだありません</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer text-end bg-white">
+    <a href="/admin/contracts" class="btn btn-sm btn-outline-primary">すべて見る <i class="bi bi-arrow-right"></i></a>
   </div>
 </div>
 {% endblock %}
