@@ -280,7 +280,8 @@ async def admin_receipts(
     total  = query.count()
     limit  = 20
     offset = (page - 1) * limit
-    receipts = query.order_by(Receipt.submitted_at.desc()).offset(offset).limit(limit).all()
+    order = (Receipt.store_id, Receipt.submitted_at.desc()) if not store_id else (Receipt.submitted_at.desc(),)
+    receipts = query.order_by(*order).offset(offset).limit(limit).all()
     stores   = db.query(Store).filter(Store.is_admin == False).all()
     return templates.TemplateResponse("admin/receipts.html", {
         "request":  request,
@@ -734,7 +735,8 @@ async def admin_contracts(
     total   = query.count()
     limit   = 20
     offset  = (page - 1) * limit
-    contracts = query.order_by(Contract.submitted_at.desc()).offset(offset).limit(limit).all()
+    c_order = (Contract.store_id, Contract.submitted_at.desc()) if not store_id else (Contract.submitted_at.desc(),)
+    contracts = query.order_by(*c_order).offset(offset).limit(limit).all()
     stores    = db.query(Store).filter(Store.is_admin == False).all()
     return templates.TemplateResponse("admin/contracts.html", {
         "request":   request,

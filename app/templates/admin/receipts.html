@@ -54,10 +54,19 @@
         </tr>
       </thead>
       <tbody>
+        {% set ns = namespace(cur_store_id=None) %}
         {% for r in receipts %}
+        {% if not sel_store and r.store_id != ns.cur_store_id %}
+        {% set ns.cur_store_id = r.store_id %}
+        <tr>
+          <td colspan="8" class="fw-bold py-1 px-3" style="font-size:0.85rem;background:#C5CAE9">
+            <i class="bi bi-shop me-1"></i>{{ r.store.store_name if r.store else "不明" }}
+          </td>
+        </tr>
+        {% endif %}
         <tr>
           <td class="text-muted">{{ r.id }}</td>
-          <td><span class="badge bg-primary-subtle text-primary">{{ r.store.store_name if r.store else "―" }}</span></td>
+          <td>{% if sel_store %}<span class="badge bg-primary-subtle text-primary">{{ r.store.store_name if r.store else "―" }}</span>{% endif %}</td>
           <td>{{ r.shop_name or "―" }} 様</td>
           <td>{{ r.name_alias or "―" }}</td>
           <td>{{ r.name_real or "―" }}</td>

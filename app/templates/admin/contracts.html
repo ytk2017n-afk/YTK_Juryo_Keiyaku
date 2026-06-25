@@ -43,10 +43,19 @@
       </tr>
     </thead>
     <tbody>
+      {% set ns = namespace(cur_store_id=None) %}
       {% for c in contracts %}
+      {% if not sel_store and c.store_id != ns.cur_store_id %}
+      {% set ns.cur_store_id = c.store_id %}
+      <tr>
+        <td colspan="4" class="fw-bold py-1 px-3" style="font-size:0.85rem;background:#C5CAE9">
+          <i class="bi bi-shop me-1"></i>{{ c.store.store_name if c.store else "不明" }}
+        </td>
+      </tr>
+      {% endif %}
       <tr>
         <td class="text-muted">{{ c.id }}</td>
-        <td class="fw-semibold">{{ c.store.store_name if c.store else "―" }}</td>
+        <td class="fw-semibold">{% if sel_store %}{{ c.store.store_name if c.store else "―" }}{% endif %}</td>
         <td>{{ c.submitted_at | jst }}</td>
         <td class="d-flex gap-1">
           {% if c.pdf_data %}
