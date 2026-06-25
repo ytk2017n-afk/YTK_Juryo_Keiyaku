@@ -13,25 +13,25 @@
 </head>
 <body>
   {% if store %}
-  <nav class="navbar navbar-dark bg-primary px-3">
-    <span class="navbar-brand fw-bold">
-      <i class="bi bi-file-text-fill me-1"></i> 受領書・契約書管理
-    </span>
-    <div class="d-flex align-items-center gap-3">
-      <span class="text-white small">{{ store.store_name }}</span>
+  <nav class="navbar navbar-dark bg-primary px-2" style="overflow-x:auto;">
+    <div class="d-flex align-items-center gap-2 flex-nowrap w-100" style="min-width:max-content;">
+      <span class="navbar-brand fw-bold mb-0 d-none d-md-inline flex-shrink-0">
+        <i class="bi bi-file-text-fill me-1"></i> 受領書・契約書管理
+      </span>
+      <span class="text-white small text-nowrap flex-shrink-0">{{ store.store_name }}</span>
       {% if store.is_admin %}
-        <a href="/admin"           class="btn btn-sm {{ 'btn-light' if request.url.path == '/admin' else 'btn-outline-light' }}">ダッシュボード</a>
-        <a href="/admin/receipts"  class="btn btn-sm {{ 'btn-light' if '/admin/receipts'  in request.url.path else 'btn-outline-light' }}">受領書</a>
-        <a href="/admin/contracts" class="btn btn-sm {{ 'btn-light' if '/admin/contracts' in request.url.path else 'btn-outline-light' }}">契約書</a>
-        <a href="/admin/stores"    class="btn btn-sm {{ 'btn-light' if '/admin/stores'    in request.url.path else 'btn-outline-light' }}">店舗管理</a>
-        <a href="/girls"           class="btn btn-sm {{ 'btn-light' if '/girls'           in request.url.path else 'btn-outline-light' }}">キャスト一覧</a>
+        <a href="/admin"           class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if request.url.path == '/admin' else 'btn-outline-light' }}">ダッシュボード</a>
+        <a href="/admin/receipts"  class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if '/admin/receipts'  in request.url.path else 'btn-outline-light' }}">受領書</a>
+        <a href="/admin/contracts" class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if '/admin/contracts' in request.url.path else 'btn-outline-light' }}">契約書</a>
+        <a href="/admin/stores"    class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if '/admin/stores'    in request.url.path else 'btn-outline-light' }}">店舗管理</a>
+        <a href="/girls"           class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if '/girls'           in request.url.path else 'btn-outline-light' }}">キャスト一覧</a>
       {% else %}
-        <a href="/receipt"  class="btn btn-sm {{ 'btn-light' if '/receipt'  in request.url.path else 'btn-outline-light' }}">受領書</a>
-        <a href="/contract" class="btn btn-sm {{ 'btn-light' if '/contract' in request.url.path else 'btn-outline-light' }}">契約書</a>
-        <a href="/girls"    class="btn btn-sm {{ 'btn-light' if '/girls'    in request.url.path else 'btn-outline-light' }}">女の子一覧</a>
-        <a href="/my-docs"  class="btn btn-sm {{ 'btn-light' if '/my-docs'  in request.url.path else 'btn-outline-light' }}">提出済書類</a>
+        <a href="/receipt"  class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if '/receipt'  in request.url.path else 'btn-outline-light' }}">受領書</a>
+        <a href="/contract" class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if '/contract' in request.url.path else 'btn-outline-light' }}">契約書</a>
+        <a href="/girls"    class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if '/girls'    in request.url.path else 'btn-outline-light' }}">女の子一覧</a>
+        <a href="/my-docs"  class="btn btn-sm text-nowrap flex-shrink-0 {{ 'btn-light' if '/my-docs'  in request.url.path else 'btn-outline-light' }}">提出済書類</a>
       {% endif %}
-      <a href="/logout" class="btn btn-sm btn-outline-light">ログアウト</a>
+      <a href="/logout" class="btn btn-sm btn-outline-light text-nowrap flex-shrink-0">ログアウト</a>
     </div>
   </nav>
   {% endif %}

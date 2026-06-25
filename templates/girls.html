@@ -14,13 +14,13 @@
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th>キャスト名</th>
-          <th>本名</th>
-          <th>住所</th>
-          <th>電話番号</th>
-          <th class="text-center">受領書</th>
-          <th class="text-center">契約書</th>
-          <th>状態</th>
+          <th class="text-nowrap">キャスト名</th>
+          <th class="text-nowrap">本名</th>
+          <th class="text-nowrap">住所</th>
+          <th class="text-nowrap">電話番号</th>
+          <th class="text-center text-nowrap">受領書</th>
+          <th class="text-center text-nowrap">契約書</th>
+          <th class="text-nowrap">状態</th>
           <th></th>
         </tr>
       </thead>
@@ -93,6 +93,10 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">キャスト名 <span class="text-danger">*</span></label>
             <input type="text" name="alias" class="form-control" placeholder="キャスト名" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">本名</label>
+            <input type="text" name="real_name" class="form-control" placeholder="本名（任意）">
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">住所</label>
