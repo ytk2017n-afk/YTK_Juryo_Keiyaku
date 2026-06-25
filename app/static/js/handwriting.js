@@ -152,6 +152,12 @@ function isCanvasEmpty(canvas) {
 let _submitting = false;
 async function submitReceipt() {
   if (_submitting) return;
+  const alias = document.getElementById('inputAlias').value.trim();
+  if (!alias) {
+    alert('キャスト名を入力してください。');
+    document.getElementById('inputAlias').focus();
+    return;
+  }
   _submitting = true;
   const overlay = document.getElementById('loadingOverlay');
   overlay.style.display = 'flex';
