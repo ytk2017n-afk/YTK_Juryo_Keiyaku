@@ -39,7 +39,7 @@
         <th>#</th>
         <th>店舗</th>
         <th>提出日時</th>
-        <th>PDF</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -48,14 +48,22 @@
         <td class="text-muted">{{ c.id }}</td>
         <td class="fw-semibold">{{ c.store.store_name if c.store else "―" }}</td>
         <td>{{ c.submitted_at.strftime("%Y/%m/%d %H:%M") if c.submitted_at else "―" }}</td>
-        <td>
-          {% if c.pdf_filename %}
-          <a href="/contract/pdf/{{ c.id }}" target="_blank" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-file-pdf me-1"></i>PDF
+        <td class="d-flex gap-1">
+          {% if c.pdf_data %}
+          <a href="/contract/pdf/{{ c.id }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="PDFプレビュー">
+            <i class="bi bi-file-pdf-fill"></i>
           </a>
           {% else %}
-          <span class="text-muted">―</span>
+          <button class="btn btn-sm btn-outline-secondary" disabled title="PDFなし">
+            <i class="bi bi-file-pdf-fill"></i>
+          </button>
           {% endif %}
+          <form method="post" action="/admin/contracts/{{ c.id }}/delete"
+                onsubmit="return confirm('契約書 #{{ c.id }} を削除しますか？')">
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="削除">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
         </td>
       </tr>
       {% endfor %}

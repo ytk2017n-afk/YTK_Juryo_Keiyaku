@@ -50,7 +50,7 @@
       <thead class="table-light">
         <tr>
           <th>#</th><th>店舗</th><th>宛名</th><th>キャスト名</th><th>本名</th>
-          <th>合計金額</th><th>提出日時</th><th>PDF</th>
+          <th>合計金額</th><th>提出日時</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -63,14 +63,22 @@
           <td>{{ r.name_real or "―" }}</td>
           <td class="fw-semibold">{% if r.total_amount %}¥ {{ r.total_amount }}{% else %}―{% endif %}</td>
           <td class="text-muted">{{ r.submitted_at.strftime("%Y/%m/%d %H:%M") if r.submitted_at else "―" }}</td>
-          <td>
-            {% if r.pdf_filename %}
-            <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-xs btn-outline-primary">
+          <td class="d-flex gap-1">
+            {% if r.pdf_data %}
+            <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-sm btn-outline-primary" title="PDFプレビュー">
               <i class="bi bi-file-pdf-fill"></i>
             </a>
             {% else %}
-            <span class="text-muted">―</span>
+            <button class="btn btn-sm btn-outline-secondary" disabled title="PDFなし">
+              <i class="bi bi-file-pdf-fill"></i>
+            </button>
             {% endif %}
+            <form method="post" action="/admin/receipts/{{ r.id }}/delete"
+                  onsubmit="return confirm('受領書 #{{ r.id }} を削除しますか？')">
+              <button type="submit" class="btn btn-sm btn-outline-danger" title="削除">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
           </td>
         </tr>
         {% else %}
