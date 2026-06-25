@@ -119,7 +119,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     def sec(x, y, w, h, label, color=C_SEC):
         fr(x, y, w, h, color, black, 0.5)
         t(x+8, y+h/2-4, label, FB, 8, white)
-        return y - h
+        return y
 
     # 行描画: ラベル列＋手書き画像列
     LBL_W = 75   # ラベル列幅（固定pt）
@@ -242,14 +242,16 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+INFO_W+STAMP_W/2, cur+stamp_h/2-14, "押印欄", FR, 7, C_MID, "center")
 
     # ── 署名欄 ──────────────────────────────────────────────────────────────────
-    SIG_H = 44; SIG_Y = OB + 2
+    cur = sec(MX, cur-SH, CW, SH, "■ 署名欄")
+    SIG_H = 60
+    cur -= SIG_H
     sig_lw = LBL_W
-    fr(MX,          SIG_Y, sig_lw,    SIG_H, C_HDR, black, 1.5)
-    t(MX+sig_lw/2,  SIG_Y+SIG_H/2-5, "署　名", FB, 9, white, "center")
-    fr(MX+sig_lw,   SIG_Y, CW-sig_lw, SIG_H, C_INP, black, 1.5)
-    _draw_field_value(cv, fields.get("sig",""), MX+sig_lw, SIG_Y, CW-sig_lw, SIG_H)
+    fr(MX,         cur, sig_lw,    SIG_H, C_HDR, black, 1.5)
+    t(MX+sig_lw/2, cur+SIG_H/2-5, "署　名", FB, 9, white, "center")
+    fr(MX+sig_lw,  cur, CW-sig_lw, SIG_H, C_INP, black, 1.5)
+    _draw_field_value(cv, fields.get("sig",""), MX+sig_lw, cur, CW-sig_lw, SIG_H)
 
-    t(MX, 10, "※ 消費税率10%は固定　／　本書は受領の証として発行します", FR, 6.5, C_NOTE)
+    t(MX, OB - 14, "※ 消費税率10%は固定　／　本書は受領の証として発行します", FR, 6.5, C_NOTE)
 
     cv.showPage()
     cv.save()
