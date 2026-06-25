@@ -70,7 +70,7 @@
           <td>{{ r.shop_name or "―" }} 様</td>
           <td>{{ r.name_alias or "―" }}</td>
           <td class="fw-semibold">{% if r.total_amount %}¥ {{ r.total_amount }}{% else %}―{% endif %}</td>
-          <td class="text-muted">{{ r.submitted_at.strftime("%m/%d %H:%M") if r.submitted_at else "―" }}</td>
+          <td class="text-muted">{{ r.submitted_at | jst }}</td>
           <td class="d-flex gap-1">
             {% if r.pdf_data %}
             <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
@@ -118,7 +118,7 @@
           <td class="text-muted">{{ c.id }}</td>
           <td><span class="badge bg-primary-subtle text-primary">{{ c.store.store_name if c.store else "―" }}</span></td>
           <td>{{ c.oto_alias_text or "―" }}</td>
-          <td class="text-muted">{{ c.submitted_at.strftime("%m/%d %H:%M") if c.submitted_at else "―" }}</td>
+          <td class="text-muted">{{ c.submitted_at | jst }}</td>
           <td class="d-flex gap-1">
             {% if c.pdf_data %}
             <a href="/contract/pdf/{{ c.id }}" target="_blank" class="btn btn-sm btn-outline-primary">

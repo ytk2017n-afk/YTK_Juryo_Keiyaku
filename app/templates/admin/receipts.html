@@ -62,7 +62,7 @@
           <td>{{ r.name_alias or "―" }}</td>
           <td>{{ r.name_real or "―" }}</td>
           <td class="fw-semibold">{% if r.total_amount %}¥ {{ r.total_amount }}{% else %}―{% endif %}</td>
-          <td class="text-muted">{{ r.submitted_at.strftime("%Y/%m/%d %H:%M") if r.submitted_at else "―" }}</td>
+          <td class="text-muted">{{ r.submitted_at | jst }}</td>
           <td class="d-flex gap-1">
             {% if r.pdf_data %}
             <a href="/receipt/pdf/{{ r.id }}" target="_blank" class="btn btn-sm btn-outline-primary">

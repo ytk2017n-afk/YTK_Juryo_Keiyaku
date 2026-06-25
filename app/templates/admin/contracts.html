@@ -47,7 +47,7 @@
       <tr>
         <td class="text-muted">{{ c.id }}</td>
         <td class="fw-semibold">{{ c.store.store_name if c.store else "―" }}</td>
-        <td>{{ c.submitted_at.strftime("%Y/%m/%d %H:%M") if c.submitted_at else "―" }}</td>
+        <td>{{ c.submitted_at | jst }}</td>
         <td class="d-flex gap-1">
           {% if c.pdf_data %}
           <a href="/contract/pdf/{{ c.id }}" target="_blank" class="btn btn-sm btn-outline-primary">

@@ -53,6 +53,15 @@ def health():
     import os as _os
     return {"status": "ok", "init_error": _init_error, "db_url": bool(_os.getenv("DATABASE_URL"))}
 templates  = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+def _to_jst(dt):
+    if dt is None: return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(JST).strftime("%Y/%m/%d %H:%M")
+
+templates.env.filters["jst"] = _to_jst
+
 pwd_ctx    = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 serializer = URLSafeTimedSerializer(SECRET_KEY)
 
