@@ -180,10 +180,7 @@ async function submitReceipt() {
     canvasData[id.replace('c_', '')] = isCanvasEmpty(c) ? '' : c.toDataURL('image/png');
   });
 
-  // テキスト入力
-  const amountRaw = document.getElementById('inputAmount').value.replace(/[,，¥\s]/g, '');
-  const amount    = parseFloat(amountRaw) || 0;
-  const tax       = Math.floor(amount * 0.1);
+  const tax   = Math.floor(amount * 0.1);
   const total     = amount + tax;
 
   const dateIso  = document.getElementById('receiptDate').value;
