@@ -169,7 +169,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+CW-SAMA_W/2,  cur+AH/2-8, "様", FB, 13, black, "center")
 
     SH = 15   # セクション見出し高さ
-    RH = 46   # 通常行高
+    RH = 40   # 通常行高
 
     # ── 受取人情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 受取人情報")
@@ -177,7 +177,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     cur -= RH; row(MX, cur, CW, RH, "勤 務 先", "workplace")
     cur -= RH; row(MX, cur, CW, RH, "本　　名", "realname")
     cur -= RH; row(MX, cur, CW, RH, "住　　所", "addr1")
-    RA = 38   # 続き行
+    RA = 30   # 続き行
     cur -= RA; row(MX, cur, CW, RA, "（続き）", "addr2", lf=C_LBL_S, vf=C_INP_S, lf_fs=7)
 
     # ── 金額 ────────────────────────────────────────────────────────────────────
