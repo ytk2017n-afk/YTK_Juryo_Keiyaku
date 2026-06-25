@@ -242,12 +242,14 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+INFO_W+STAMP_W/2, cur+stamp_h/2-14, "押印欄", FR, 7, C_MID, "center")
 
     # ── 署名欄 ──────────────────────────────────────────────────────────────────
-    cur = sec(MX, cur-SH, CW, SH, "■ 署名欄")
+    SSH = 18
+    cur = sec(MX, cur-SSH, CW, SSH, "■ 受取人（キャスト）署名欄　　※ 以下は受取人本人が署名してください", C_HDR)
     SIG_H = 60
     cur -= SIG_H
     sig_lw = LBL_W
     fr(MX,         cur, sig_lw,    SIG_H, C_HDR, black, 1.5)
-    t(MX+sig_lw/2, cur+SIG_H/2-5, "署　名", FB, 9, white, "center")
+    t(MX+sig_lw/2, cur+SIG_H/2+2,  "受取人",  FB, 7, white, "center")
+    t(MX+sig_lw/2, cur+SIG_H/2-9, "署　名", FB, 9, white, "center")
     fr(MX+sig_lw,  cur, CW-sig_lw, SIG_H, C_INP, black, 1.5)
     _draw_field_value(cv, fields.get("sig",""), MX+sig_lw, cur, CW-sig_lw, SIG_H)
 
