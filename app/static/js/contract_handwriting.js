@@ -8,7 +8,7 @@ let penSize  = 2;
 let penColor = '#1A237E';
 const DPR    = window.devicePixelRatio || 1;
 
-const FIELD_IDS = ['c_oto_preamble', 'c_oto_realname', 'c_oto_sig'];
+const FIELD_IDS = ['c_oto_sig'];
 
 // ── Canvas初期化 ─────────────────────────────────────────────────────────────
 function initCanvas(canvas) {
@@ -171,10 +171,9 @@ async function submitContract() {
   const payload  = {
     ...canvasData,
     date:          formatDateJP(dateIso),
+    oto_realname:  document.getElementById('inputOtoRealname').value,
     oto_addr:      document.getElementById('inputOtoAddr').value,
     oto_alias:     document.getElementById('inputOtoAlias').value,
-    oto_workplace: (document.getElementById('inputOtoWorkplace') || {value: ''}).value,
-    oto_sig:       isCanvasEmpty(document.getElementById('c_oto_sig')) ? '' : document.getElementById('c_oto_sig').toDataURL('image/png'),
   };
 
   try {

@@ -652,9 +652,9 @@ async def submit_contract(
     pdf_bytes = _generate_pdf_bytes(generate_contract_pdf, {
         "fields":        fields,
         "date_text":     fields.get("date", ""),
+        "oto_realname":  fields.get("oto_realname", ""),
         "oto_addr":      fields.get("oto_addr", ""),
         "oto_alias":     fields.get("oto_alias", ""),
-        "oto_workplace": fields.get("oto_workplace", store.store_name),
         "store_name":    store.store_name,
         "store_address": store.store_address or "",
     })

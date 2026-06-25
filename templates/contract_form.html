@@ -274,12 +274,9 @@
   <!-- 乙（入力） -->
   <div class="doc-sec" style="background:#F57F17;color:#fff"><i class="bi bi-pencil me-1"></i>乙（受託者）</div>
 
-  <div class="doc-row" style="min-height:110px">
-    <div class="doc-label" style="flex-direction:column;gap:2px"><div>氏　　名</div><div style="font-size:0.7rem;font-weight:400;color:#777">（手書き）</div></div>
-    <div class="canvas-wrap" style="min-height:110px">
-      <canvas id="c_oto_preamble"></canvas>
-      <button class="clear-btn" onclick="clearField('c_oto_preamble')">✕</button>
-    </div>
+  <div class="doc-row">
+    <div class="doc-label">氏　　名</div>
+    <div class="auto-field" id="preambleNameDisplay" style="background:#FFFDE7;color:#333;font-size:1rem">—</div>
   </div>
 
   <!-- 前文 -->
@@ -369,11 +366,11 @@
     </div>
   </div>
 
-  <div class="doc-row" style="min-height:110px">
-    <div class="doc-label" style="flex-direction:column;gap:2px"><div>氏　　名</div><div style="font-size:0.7rem;font-weight:400;color:#555">（手書き）</div></div>
-    <div class="canvas-wrap" style="min-height:110px">
-      <canvas id="c_oto_realname"></canvas>
-      <button class="clear-btn" onclick="clearField('c_oto_realname')">✕</button>
+  <div class="doc-row">
+    <div class="doc-label">氏名（本名）</div>
+    <div class="doc-input-wrap">
+      <input type="text" id="inputOtoRealname" class="doc-text-input" placeholder="本名を入力"
+             oninput="document.getElementById('preambleNameDisplay').textContent = this.value || '—'">
     </div>
   </div>
 
@@ -419,6 +416,9 @@ function fillGirlData() {
   const sel = document.getElementById('girlSelect');
   const opt = sel.options[sel.selectedIndex];
   if (!opt || !opt.value) return;
+  const realName = opt.dataset.realName || '';
+  document.getElementById('inputOtoRealname').value             = realName;
+  document.getElementById('preambleNameDisplay').textContent    = realName || '—';
   document.getElementById('inputOtoAlias').value = opt.dataset.alias   || '';
   document.getElementById('inputOtoAddr').value  = opt.dataset.address || '';
 }
