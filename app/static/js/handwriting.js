@@ -152,12 +152,22 @@ function isCanvasEmpty(canvas) {
 let _submitting = false;
 async function submitReceipt() {
   if (_submitting) return;
-  const alias = document.getElementById('inputAlias').value.trim();
+
+  const alias     = document.getElementById('inputAlias').value.trim();
+  const amountRaw = document.getElementById('inputAmount').value.replace(/[,，¥\s]/g, '');
+  const amount    = parseFloat(amountRaw) || 0;
+
   if (!alias) {
     alert('キャスト名を入力してください。');
     document.getElementById('inputAlias').focus();
     return;
   }
+  if (amount <= 0) {
+    alert('金額を入力してください。');
+    document.getElementById('inputAmount').focus();
+    return;
+  }
+
   _submitting = true;
   const overlay = document.getElementById('loadingOverlay');
   overlay.style.display = 'flex';
