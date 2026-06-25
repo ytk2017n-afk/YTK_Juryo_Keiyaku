@@ -196,14 +196,15 @@ async function submitReceipt() {
 
   const payload = {
     ...canvasData,
-    date:    dateText,
-    alias:   document.getElementById('inputAlias').value,
-    address: document.getElementById('inputAddress').value,
-    phone:   document.getElementById('inputPhone').value,
-    amount:  amount > 0 ? amount.toLocaleString() : '',
-    tax:     amount > 0 ? tax.toLocaleString()    : '',
-    total:   amount > 0 ? total.toLocaleString()  : '',
-    desc:    document.getElementById('inputDesc').value,
+    date:      dateText,
+    alias:     document.getElementById('inputAlias').value,
+    workplace: (document.getElementById('inputWorkplace') || {value: ''}).value,
+    address:   document.getElementById('inputAddress').value,
+    phone:     document.getElementById('inputPhone').value,
+    amount:    amount > 0 ? amount.toLocaleString() : '',
+    tax:       amount > 0 ? tax.toLocaleString()    : '',
+    total:     amount > 0 ? total.toLocaleString()  : '',
+    desc:      document.getElementById('inputDesc').value,
   };
 
   try {

@@ -170,10 +170,11 @@ async function submitContract() {
   const dateIso  = document.getElementById('contractDate').value;
   const payload  = {
     ...canvasData,
-    date:      formatDateJP(dateIso),
-    oto_addr:  document.getElementById('inputOtoAddr').value,
-    oto_alias: document.getElementById('inputOtoAlias').value,
-    oto_sig:   isCanvasEmpty(document.getElementById('c_oto_sig')) ? '' : document.getElementById('c_oto_sig').toDataURL('image/png'),
+    date:          formatDateJP(dateIso),
+    oto_addr:      document.getElementById('inputOtoAddr').value,
+    oto_alias:     document.getElementById('inputOtoAlias').value,
+    oto_workplace: (document.getElementById('inputOtoWorkplace') || {value: ''}).value,
+    oto_sig:       isCanvasEmpty(document.getElementById('c_oto_sig')) ? '' : document.getElementById('c_oto_sig').toDataURL('image/png'),
   };
 
   try {

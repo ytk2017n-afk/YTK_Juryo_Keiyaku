@@ -161,6 +161,7 @@ async def submit_handwriting(
         "date_text":       fields.get("date", ""),
         "atena":           store.store_name,
         "alias":           fields.get("alias", ""),
+        "workplace":       fields.get("workplace", store.store_name),
         "address":         fields.get("address", ""),
         "phone":           fields.get("phone", ""),
         "amount_text":     fields.get("amount", ""),
@@ -650,6 +651,7 @@ async def submit_contract(
         "date_text":     fields.get("date", ""),
         "oto_addr":      fields.get("oto_addr", ""),
         "oto_alias":     fields.get("oto_alias", ""),
+        "oto_workplace": fields.get("oto_workplace", store.store_name),
         "store_name":    store.store_name,
         "store_address": store.store_address or "",
     })

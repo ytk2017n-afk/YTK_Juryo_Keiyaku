@@ -85,9 +85,10 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
         "date":     raw.get("date",     ""),
         "invoice":  raw.get("invoice",  data.get("store_invoice_no", "")),
         "shopname": raw.get("shopname", data.get("store_name", "")),
-        "alias":    raw.get("alias",    ""),
-        "realname": raw.get("realname", ""),
-        "addr1":    raw.get("addr1",    raw.get("address", "")),
+        "alias":     raw.get("alias",     ""),
+        "workplace": raw.get("workplace", data.get("workplace", "")),
+        "realname":  raw.get("realname",  ""),
+        "addr1":     raw.get("addr1",     raw.get("address", "")),
         "addr2":    raw.get("addr2",    ""),
         "amount":   raw.get("amount",   ""),
         "tax":      raw.get("tax",      ""),
@@ -173,6 +174,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     # ── 受取人情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 受取人情報")
     cur -= RH; row(MX, cur, CW, RH, "キャスト名", "alias")
+    cur -= RH; row(MX, cur, CW, RH, "勤 務 先", "workplace")
     cur -= RH; row(MX, cur, CW, RH, "本　　名", "realname")
     cur -= RH; row(MX, cur, CW, RH, "住　　所", "addr1")
     RA = 38   # 続き行

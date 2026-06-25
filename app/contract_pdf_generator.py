@@ -140,6 +140,7 @@ def generate_contract_pdf(data: dict, out_path: str) -> str:
     date_text     = data.get("date_text",     "")
     oto_addr      = data.get("oto_addr",      "")
     oto_alias     = data.get("oto_alias",     "")
+    oto_workplace = data.get("oto_workplace", store_name)
 
     os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
 
@@ -271,7 +272,9 @@ def generate_contract_pdf(data: dict, out_path: str) -> str:
     story.append(SP(1))
     story.append(HandwritingField(fields.get("oto_realname", ""), "氏名（本名）", height=13*mm))
     story.append(SP(1))
-    story.append(AutoField(oto_alias, "キャスト名",    height=11*mm))
+    story.append(AutoField(oto_alias,     "キャスト名", height=11*mm))
+    story.append(SP(1))
+    story.append(AutoField(oto_workplace, "勤 務 先",   height=11*mm))
     story.append(SP(1))
     story.append(HandwritingField(fields.get("oto_sig", ""), "署　　名", height=14*mm))
 
