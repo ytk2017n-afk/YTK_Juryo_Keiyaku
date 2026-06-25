@@ -507,19 +507,22 @@ async def girls_list(
     store: Store = Depends(require_login),
     db: Session  = Depends(get_db),
 ):
-    girls = db.query(Girl).filter(Girl.store_id == store.id).order_by(Girl.alias).all()
+    if store.is_admin:
+        girls = db.query(Girl).order_by(Girl.store_id, Girl.alias).all()
+    else:
+        girls = db.query(Girl).filter(Girl.store_id == store.id).order_by(Girl.alias).all()
 
     # キャスト名ごとの提出件数を集計
     receipt_counts = {}
     contract_counts = {}
     for g in girls:
         receipt_counts[g.id] = db.query(Receipt).filter(
-            Receipt.store_id == store.id,
+            Receipt.store_id == g.store_id,
             Receipt.name_alias == g.alias,
             Receipt.is_deleted == False,
         ).count()
         contract_counts[g.id] = db.query(Contract).filter(
-            Contract.store_id == store.id,
+            Contract.store_id == g.store_id,
             Contract.oto_alias_text == g.alias,
             Contract.is_deleted == False,
         ).count()

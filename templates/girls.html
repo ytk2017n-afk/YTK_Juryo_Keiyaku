@@ -15,6 +15,7 @@
       <thead class="table-light">
         <tr>
           <th class="text-nowrap">キャスト名</th>
+          {% if store.is_admin %}<th class="text-nowrap">店舗</th>{% endif %}
           <th class="text-nowrap">本名</th>
           <th class="text-nowrap">住所</th>
           <th class="text-nowrap">電話番号</th>
@@ -28,6 +29,7 @@
         {% for g in girls %}
         <tr>
           <td class="fw-semibold">{{ g.alias }}</td>
+          {% if store.is_admin %}<td class="text-muted small">{{ g.store.store_name if g.store else "―" }}</td>{% endif %}
           <td class="text-muted">{{ g.real_name or "―" }}</td>
           <td class="text-muted small">{{ g.address or "―" }}</td>
           <td class="text-muted small">{{ g.phone or "―" }}</td>
