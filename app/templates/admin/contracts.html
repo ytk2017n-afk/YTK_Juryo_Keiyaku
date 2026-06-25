@@ -51,11 +51,11 @@
         <td class="d-flex gap-1">
           {% if c.pdf_data %}
           <a href="/contract/pdf/{{ c.id }}" target="_blank" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-file-pdf-fill me-1"></i>閲覧
+            <i class="bi bi-eye me-1"></i>閲覧
           </a>
           {% else %}
           <button class="btn btn-sm btn-outline-secondary" disabled>
-            <i class="bi bi-file-pdf-fill me-1"></i>閲覧
+            <i class="bi bi-eye me-1"></i>閲覧
           </button>
           {% endif %}
           <form method="post" action="/admin/contracts/{{ c.id }}/delete"
