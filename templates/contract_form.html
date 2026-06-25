@@ -223,6 +223,7 @@
     {% for g in girls %}
     <option value="{{ g.id }}"
             data-alias="{{ g.alias | e }}"
+            data-real-name="{{ g.real_name | e }}"
             data-address="{{ g.address | e }}">{{ g.alias }}</option>
     {% endfor %}
   </select>
