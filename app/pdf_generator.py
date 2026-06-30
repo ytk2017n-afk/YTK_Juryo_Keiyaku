@@ -191,6 +191,11 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     fr(vx, cur, vw, RLG, C_INP, black, 1.2)
     _draw_field_value(cv, fields.get("amount",""), vx, cur, vw, RLG, font=FB, fs=16)
 
+    # 金額注記
+    NOTE_H = 14
+    cur -= NOTE_H
+    t(MX+4, cur+NOTE_H/2-3, "※所得税引いた金額", FR, 7, HexColor("#888888"))
+
     # ── 但し書 ──────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 但し書")
     RD = 48
