@@ -118,20 +118,6 @@ function clearAllFields() {
   FIELD_IDS.forEach(id => clearField(id));
 }
 
-// ── 消費税自動計算 ────────────────────────────────────────────────────────────
-function calcTax() {
-  const raw = document.getElementById('inputAmount').value.replace(/[,，¥\s]/g, '');
-  const amount = parseFloat(raw);
-  if (isNaN(amount) || amount <= 0) {
-    document.getElementById('taxDisplay').textContent   = '―';
-    document.getElementById('totalDisplay').textContent = '―';
-    return;
-  }
-  const tax   = Math.floor(amount * 0.1);
-  const total = amount + tax;
-  document.getElementById('taxDisplay').textContent   = tax.toLocaleString();
-  document.getElementById('totalDisplay').textContent = total.toLocaleString();
-}
 
 // ── 日付フォーマット ──────────────────────────────────────────────────────────
 function formatDateJP(isoDate) {
@@ -188,9 +174,6 @@ async function submitReceipt() {
     canvasData[id.replace('c_', '')] = isCanvasEmpty(c) ? '' : c.toDataURL('image/png');
   });
 
-  const tax   = Math.floor(amount * 0.1);
-  const total     = amount + tax;
-
   const dateIso  = document.getElementById('receiptDate').value;
   const dateText = formatDateJP(dateIso);
 
@@ -202,8 +185,6 @@ async function submitReceipt() {
     address:   document.getElementById('inputAddress').value,
     phone:     document.getElementById('inputPhone').value,
     amount:    amount > 0 ? amount.toLocaleString() : '',
-    tax:       amount > 0 ? tax.toLocaleString()    : '',
-    total:     amount > 0 ? total.toLocaleString()  : '',
     desc:      document.getElementById('inputDesc').value,
   };
 

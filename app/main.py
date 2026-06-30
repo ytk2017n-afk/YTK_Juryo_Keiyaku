@@ -157,8 +157,6 @@ async def submit_handwriting(
         name_real     = "",   # 手書きのためテキスト取得不可
         address       = fields.get("address", ""),
         amount        = fields.get("amount", ""),
-        tax_amount    = fields.get("tax", ""),
-        total_amount  = fields.get("total", ""),
         description   = fields.get("desc", ""),
         signature_b64 = fields.get("sig", ""),
     )

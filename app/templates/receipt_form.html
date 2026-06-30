@@ -152,14 +152,7 @@
 .amount-row { min-height: 60px; }
 .amount-row .doc-label { font-size: 0.95rem; font-weight: 700; }
 .amount-input { font-size: 1.3rem; font-weight: 700; }
-/* 消費税率 */
-.tax-fixed-row { min-height: 38px; }
-.tax-fixed-val { flex: 1; background: #F5F5F5; display: flex; align-items: center; padding: 0 14px; color: #555; font-size: 0.9rem; }
-/* 合計 */
-.total-row { min-height: 60px; }
-.total-row .doc-label { background: #3F51B5; color: #fff; font-size: 0.9rem; }
-.total-val { background: #EDE7F6; font-size: 1.3rem; font-weight: 700; color: #3F51B5; }
-.total-row .yen-prefix { background: #EDE7F6; color: #3F51B5; }
+
 /* 発行者 */
 .issuer-wrap { display: flex; border-bottom: 1px solid #E0E0E0; }
 .issuer-left { flex: 1; }
@@ -315,22 +308,6 @@
     </div>
   </div>
 
-  <div class="doc-row tax-fixed-row">
-    <div class="doc-label">消費税率</div>
-    <div class="tax-fixed-val">10%（固定）</div>
-  </div>
-
-  <div class="doc-row" style="min-height:44px">
-    <div class="doc-label">消費税額</div>
-    <div class="yen-prefix" style="font-size:1rem">¥</div>
-    <div class="doc-auto-val" id="taxDisplay">―</div>
-  </div>
-
-  <div class="doc-row total-row amount-row">
-    <div class="doc-label">合 計 金 額</div>
-    <div class="yen-prefix">¥</div>
-    <div class="doc-auto-val total-val" id="totalDisplay">―</div>
-  </div>
 
   <!-- 但し書 -->
   <div class="doc-sec"><i class="bi bi-chat-text me-1"></i>但し書</div>

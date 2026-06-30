@@ -91,8 +91,6 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
         "addr1":     raw.get("addr1",     raw.get("address", "")),
         "addr2":    raw.get("addr2",    ""),
         "amount":   raw.get("amount",   ""),
-        "tax":      raw.get("tax",      ""),
-        "total":    raw.get("total",    ""),
         "desc":     raw.get("desc",     ""),
         "sig":      raw.get("sig",      ""),
     }
@@ -192,26 +190,6 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     vx = MX+LBL_W+PREW; vw = CW-LBL_W-PREW
     fr(vx, cur, vw, RLG, C_INP, black, 1.2)
     _draw_field_value(cv, fields.get("amount",""), vx, cur, vw, RLG, font=FB, fs=16)
-
-    # 消費税率固定
-    RS = 34
-    cur -= RS
-    fr(MX,       cur, LBL_W, RS, C_GRAY, black, 0.5)
-    t(MX+LBL_W/2,cur+RS/2-4, "消費税率", FR, 8, HexColor("#555555"), "center")
-    fr(MX+LBL_W, cur, CW-LBL_W, RS, C_GRAY, black, 0.5)
-    t(MX+LBL_W+8,cur+RS/2-4, "10%（固定）", FR, 8, HexColor("#555555"))
-
-    # 消費税額
-    cur -= RH; row(MX, cur, CW, RH, "消費税額", "tax", prefix="¥", prefix_w=PREW)
-
-    # 合計金額
-    cur -= RLG
-    fr(MX,        cur, LBL_W, RLG, C_HDR, black, 1.5)
-    t(MX+LBL_W/2, cur+RLG/2-6, "合計金額", FB, 10, white, "center")
-    fr(MX+LBL_W,  cur, PREW, RLG, C_TOT_V, black, 1.5)
-    t(MX+LBL_W+PREW/2, cur+RLG/2-9, "¥", FB, 14, C_HDR, "center")
-    fr(MX+LBL_W+PREW, cur, CW-LBL_W-PREW, RLG, C_TOT_V, black, 1.5)
-    _draw_field_value(cv, fields.get("total",""), MX+LBL_W+PREW, cur, CW-LBL_W-PREW, RLG, font=FB, fs=16)
 
     # ── 但し書 ──────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 但し書")
