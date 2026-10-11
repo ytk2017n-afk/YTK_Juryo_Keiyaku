@@ -7,7 +7,7 @@ let penSize  = 2;
 let penColor = '#1A237E';
 const DPR    = window.devicePixelRatio || 1;
 
-const FIELD_IDS = ['c_sig'];
+const FIELD_IDS = ['c_meimoku', 'c_sig'];
 
 // ── Canvas初期化 ─────────────────────────────────────────────────────────────
 function initCanvas(canvas) {
@@ -177,15 +177,28 @@ async function submitReceipt() {
   const dateIso  = document.getElementById('receiptDate').value;
   const dateText = formatDateJP(dateIso);
 
+  const pFrom = document.getElementById('periodFrom').value;
+  const pTo   = document.getElementById('periodTo').value;
+  if (pFrom && pTo && pFrom > pTo) {
+    _submitting = false;
+    overlay.style.display = 'none';
+    alert('対象期間の開始日が終了日より後になっています。');
+    return;
+  }
+  const periodText = !pFrom && !pTo ? ''
+    : (pFrom === pTo || !pTo) ? formatDateJP(pFrom)
+    : `${formatDateJP(pFrom)} 〜 ${formatDateJP(pTo)}`;
+
   const payload = {
     ...canvasData,
     date:      dateText,
+    period:    periodText,
     realname:  document.getElementById('inputRealname').value,
     alias:     document.getElementById('inputAlias').value,
     address:   document.getElementById('inputAddress').value,
     phone:     document.getElementById('inputPhone').value,
     amount:    amount > 0 ? amount.toLocaleString() : '',
-    desc:      document.getElementById('inputDesc').value,
+    desc:      '業務委託費として',
   };
 
   try {

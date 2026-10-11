@@ -91,7 +91,9 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
         "addr1":     raw.get("addr1",     raw.get("address", "")),
         "addr2":    raw.get("addr2",    ""),
         "amount":   raw.get("amount",   ""),
-        "desc":     raw.get("desc",     ""),
+        "desc":     "業務委託費として",
+        "period":   raw.get("period",   data.get("period_text", "")),
+        "meimoku":  raw.get("meimoku",  ""),
         "sig":      raw.get("sig",      ""),
     }
     tmp_path = out_path + ".base.pdf"
@@ -157,7 +159,13 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     cur = TY
 
     # ── 宛名（大きめ） ──────────────────────────────────────────────────────────
-    AH = 56; ALW = 60; SAMA_W = 28
+    UH = 38   # 全行共通の高さ
+    cur -= UH
+    row(MX, cur, CW, UH, "提 出 日", "date")
+    cur -= UH
+    row(MX, cur, CW, UH, "対象期間", "period")
+
+    AH = UH; ALW = 60; SAMA_W = 28
     cur -= AH
     fr(MX,             cur, ALW,          AH, C_HDR, black, 1.5)
     t(MX+ALW/2,        cur+AH/2-7, "宛　名", FB, 11, white, "center")
@@ -167,20 +175,20 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+CW-SAMA_W/2,  cur+AH/2-8, "様", FB, 13, black, "center")
 
     SH = 15   # セクション見出し高さ
-    RH = 44   # 通常行高
+    RH = UH   # 通常行高
 
     # ── 受取人情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 受取人情報")
     cur -= RH; row(MX, cur, CW, RH, "キャスト名", "alias")
     cur -= RH; row(MX, cur, CW, RH, "本　　名", "realname")
     cur -= RH; row(MX, cur, CW, RH, "住　　所", "addr1")
-    RA = 36   # 続き行
+    RA = UH   # 続き行
     cur -= RA; row(MX, cur, CW, RA, "（続き）", "addr2", lf=C_LBL_S, vf=C_INP_S, lf_fs=7)
 
     # ── 金額 ────────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 金額")
 
-    RLG = 52  # 金額大きい行
+    RLG = UH  # 金額行
     cur -= RLG
     fr(MX,        cur, LBL_W, RLG, C_LBL, black, 1.2)
     t(MX+LBL_W/2, cur+RLG/2-6, "金　　額", FB, 10, black, "center")
@@ -197,9 +205,9 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+4, cur+NOTE_H/2-3, "※所得税引いた金額", FR, 7, HexColor("#888888"))
 
     # ── 但し書 ──────────────────────────────────────────────────────────────────
-    cur = sec(MX, cur-SH, CW, SH, "■ 但し書")
-    RD = 48
-    cur -= RD; row(MX, cur, CW, RD, "但 し 書", "desc")
+    cur = sec(MX, cur-SH, CW, SH, "■ 名目")
+    cur -= UH; row(MX, cur, CW, UH, "名　　目", "desc")
+    cur -= UH; row(MX, cur, CW, UH, "名目(手書き)", "meimoku", lf_fs=7)
 
     # ── 発行者情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 発行者情報", C_SEC2)
@@ -212,7 +220,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     ]
     if data.get("store_invoice_no"):
         iss_rows.append(("インボイス", "T" + data["store_invoice_no"]))
-    IRH = 30
+    IRH = UH
     for label, val in iss_rows:
         cur -= IRH
         fr(MX,         cur, LBL_W, IRH, C_LBL_S, black, 0.5)
@@ -227,7 +235,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     # ── 署名欄 ──────────────────────────────────────────────────────────────────
     SSH = 18
     cur = sec(MX, cur-SSH, CW, SSH, "■ 受取人（キャスト）署名欄　　※ 以下は受取人本人が署名してください", C_HDR)
-    SIG_H = 60
+    SIG_H = UH
     cur -= SIG_H
     sig_lw = LBL_W
     fr(MX,         cur, sig_lw,    SIG_H, C_HDR, black, 1.5)

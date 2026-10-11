@@ -157,7 +157,8 @@ async def submit_handwriting(
         name_real     = "",   # 手書きのためテキスト取得不可
         address       = fields.get("address", ""),
         amount        = fields.get("amount", ""),
-        description   = fields.get("desc", ""),
+        description   = "業務委託費として",
+        period_text   = fields.get("period", ""),
         signature_b64 = fields.get("sig", ""),
     )
     db.add(receipt)
@@ -177,7 +178,8 @@ async def submit_handwriting(
         "amount_text":     fields.get("amount", ""),
         "tax_text":        fields.get("tax", ""),
         "total_text":      fields.get("total", ""),
-        "desc":            fields.get("desc", ""),
+        "desc":            "業務委託費として",
+        "period_text":     fields.get("period", ""),
         "store_name":      store.store_name,
         "store_address":   store.store_address or "",
         "store_contact":   store.store_contact or "",
@@ -328,13 +330,13 @@ async def export_csv(
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(["ID","店舗","日付","宛名(店舗名)","キャスト名","本名","住所",
-                     "金額","消費税額","合計金額","但し書","提出日時"])
+                     "金額","消費税額","合計金額","名目","対象期間","提出日時"])
     for r in receipts:
         writer.writerow([
             r.id, r.store.store_name if r.store else "",
             r.receipt_date, r.shop_name, r.name_alias, r.name_real,
             r.address, r.amount, r.tax_amount, r.total_amount,
-            r.description,
+            r.description, r.period_text,
             r.submitted_at.strftime("%Y-%m-%d %H:%M") if r.submitted_at else "",
         ])
     buf.seek(0)
