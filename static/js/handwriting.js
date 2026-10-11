@@ -1,13 +1,13 @@
 /**
  * 手書きCanvas管理 - Apple Pencil / タッチ対応
- * 手書きフィールド: 本名(c_realname)、名目(c_meimoku)、署名(c_sig) の3箇所
+ * 手書きフィールド: 本名(c_realname)、キャスト名(c_alias)、署名(c_sig) の3箇所のみ
  */
 
 let penSize  = 2;
 let penColor = '#1A237E';
 const DPR    = window.devicePixelRatio || 1;
 
-const FIELD_IDS = ['c_realname', 'c_meimoku', 'c_sig'];
+const FIELD_IDS = ['c_realname', 'c_sig'];
 
 // ── Canvas初期化 ─────────────────────────────────────────────────────────────
 function initCanvas(canvas) {
@@ -170,28 +170,16 @@ async function submitReceipt() {
   const dateIso  = document.getElementById('receiptDate').value;
   const dateText = formatDateJP(dateIso);
 
-  const pFrom = document.getElementById('periodFrom').value;
-  const pTo   = document.getElementById('periodTo').value;
-  if (pFrom && pTo && pFrom > pTo) {
-    overlay.style.display = 'none';
-    alert('対象期間の開始日が終了日より後になっています。');
-    return;
-  }
-  const periodText = !pFrom && !pTo ? ''
-    : (pFrom === pTo || !pTo) ? formatDateJP(pFrom)
-    : `${formatDateJP(pFrom)} 〜 ${formatDateJP(pTo)}`;
-
   const payload = {
     ...canvasData,
     date:    dateText,
-    period:  periodText,
     alias:   document.getElementById('inputAlias').value,
     address: document.getElementById('inputAddress').value,
     phone:   document.getElementById('inputPhone').value,
     amount:  amount > 0 ? amount.toLocaleString() : '',
     tax:     amount > 0 ? tax.toLocaleString()    : '',
     total:   amount > 0 ? total.toLocaleString()  : '',
-    desc:    '業務委託費として',
+    desc:    document.getElementById('inputDesc').value,
   };
 
   try {
