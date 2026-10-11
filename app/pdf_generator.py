@@ -91,8 +91,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
         "addr1":     raw.get("addr1",     raw.get("address", "")),
         "addr2":    raw.get("addr2",    ""),
         "amount":   raw.get("amount",   ""),
-        "desc":     "業務委託費として",
-        "period":   raw.get("period",   data.get("period_text", "")),
+        "desc":     "その他" if raw.get("desc") == "その他" else "業務委託費として",
         "meimoku":  raw.get("meimoku",  ""),
         "sig":      raw.get("sig",      ""),
     }
@@ -162,8 +161,6 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     UH = 38   # 全行共通の高さ
     cur -= UH
     row(MX, cur, CW, UH, "提 出 日", "date")
-    cur -= UH
-    row(MX, cur, CW, UH, "対象期間", "period")
 
     AH = UH; ALW = 60; SAMA_W = 28
     cur -= AH
@@ -207,7 +204,8 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     # ── 但し書 ──────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 名目")
     cur -= UH; row(MX, cur, CW, UH, "名　　目", "desc")
-    cur -= UH; row(MX, cur, CW, UH, "名目(手書き)", "meimoku", lf_fs=7)
+    if fields["desc"] == "その他":
+        cur -= UH; row(MX, cur, CW, UH, "名目(手書き)", "meimoku", lf_fs=7)
 
     # ── 発行者情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 発行者情報", C_SEC2)

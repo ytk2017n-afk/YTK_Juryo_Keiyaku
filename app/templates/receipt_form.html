@@ -263,14 +263,6 @@
       <input type="date" id="receiptDate" class="doc-text-input" value="{{ today_iso }}">
     </div>
   </div>
-  <div class="doc-row">
-    <div class="doc-label">対象期間</div>
-    <div class="doc-input-wrap" style="gap:8px;flex-wrap:wrap">
-      <input type="date" id="periodFrom" class="doc-text-input" style="width:auto" value="{{ today_iso }}">
-      <span class="fw-bold">〜</span>
-      <input type="date" id="periodTo" class="doc-text-input" style="width:auto" value="{{ today_iso }}">
-    </div>
-  </div>
 
   <!-- 宛名（店舗名プリセット） -->
   <div class="doc-row atena-row">
@@ -328,10 +320,15 @@
 
   <div class="doc-row">
     <div class="doc-label">名　　目</div>
-    <div class="doc-auto-val fw-bold" style="color:#222;font-size:1.1rem">業務委託費として</div>
+    <div class="doc-input-wrap">
+      <select id="selectMeimoku" class="doc-text-input fw-bold" style="font-size:1.1rem" onchange="toggleMeimoku()">
+        <option value="業務委託費として" selected>業務委託費として</option>
+        <option value="その他">その他（手書き）</option>
+      </select>
+    </div>
   </div>
 
-  <div class="doc-row">
+  <div class="doc-row" id="meimokuHandRow" style="display:none">
     <div class="doc-label" style="flex-direction:column;gap:2px"><div>名目</div><div style="font-size:0.7rem;font-weight:400">（手書き）</div></div>
     <div class="canvas-wrap">
       <canvas id="c_meimoku"></canvas>
@@ -401,6 +398,12 @@
 {% block scripts %}
 <script src="/static/js/handwriting.js"></script>
 <script>
+function toggleMeimoku() {
+  const other = document.getElementById('selectMeimoku').value === 'その他';
+  document.getElementById('meimokuHandRow').style.display = other ? 'flex' : 'none';
+  if (other) initCanvas(document.getElementById('c_meimoku'));
+}
+
 function fillGirlData() {
   const sel = document.getElementById('girlSelect');
   const opt = sel.options[sel.selectedIndex];

@@ -156,6 +156,13 @@ async function submitReceipt() {
     sigCanvas && sigCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
+  const meimoku = document.getElementById('selectMeimoku').value;
+  const meimokuCanvas = document.getElementById('c_meimoku');
+  if (meimoku === 'その他' && isCanvasEmpty(meimokuCanvas)) {
+    alert('名目を手書きしてください。');
+    meimokuCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   if (amount <= 0) {
     alert('金額を入力してください。');
     document.getElementById('inputAmount').focus();
@@ -173,32 +180,21 @@ async function submitReceipt() {
     if (!c) return;
     canvasData[id.replace('c_', '')] = isCanvasEmpty(c) ? '' : c.toDataURL('image/png');
   });
+  if (meimoku !== 'その他') canvasData['meimoku'] = '';
 
   const dateIso  = document.getElementById('receiptDate').value;
   const dateText = formatDateJP(dateIso);
 
-  const pFrom = document.getElementById('periodFrom').value;
-  const pTo   = document.getElementById('periodTo').value;
-  if (pFrom && pTo && pFrom > pTo) {
-    _submitting = false;
-    overlay.style.display = 'none';
-    alert('対象期間の開始日が終了日より後になっています。');
-    return;
-  }
-  const periodText = !pFrom && !pTo ? ''
-    : (pFrom === pTo || !pTo) ? formatDateJP(pFrom)
-    : `${formatDateJP(pFrom)} 〜 ${formatDateJP(pTo)}`;
 
   const payload = {
     ...canvasData,
     date:      dateText,
-    period:    periodText,
     realname:  document.getElementById('inputRealname').value,
     alias:     document.getElementById('inputAlias').value,
     address:   document.getElementById('inputAddress').value,
     phone:     document.getElementById('inputPhone').value,
     amount:    amount > 0 ? amount.toLocaleString() : '',
-    desc:      '業務委託費として',
+    desc:      meimoku,
   };
 
   try {
