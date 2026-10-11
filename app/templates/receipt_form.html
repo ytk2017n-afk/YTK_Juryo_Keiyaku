@@ -208,20 +208,6 @@
 
 {% block content %}
 
-<!-- 日付ピッカー -->
-<div class="date-picker-bar sticky-top" style="top:56px;z-index:101">
-  <label for="receiptDate"><i class="bi bi-calendar3 me-1"></i>提出日：</label>
-  <input type="date" id="receiptDate" value="{{ today_iso }}">
-</div>
-
-<!-- 業務委託の対象期間 -->
-<div class="date-picker-bar" style="max-width:680px;margin:0 auto 8px;background:#FFF3E0;border-color:#FFCC80;flex-wrap:wrap">
-  <label for="periodFrom" style="color:#E65100"><i class="bi bi-calendar-range me-1"></i>対象期間：</label>
-  <input type="date" id="periodFrom" value="{{ today_iso }}">
-  <span class="fw-bold">〜</span>
-  <input type="date" id="periodTo" value="{{ today_iso }}">
-</div>
-
 <!-- キャスト選択 -->
 {% if girls %}
 <div class="date-picker-bar" style="max-width:680px;margin:0 auto 8px;background:#E8F5E9;border-color:#A5D6A7">
@@ -240,7 +226,7 @@
 {% endif %}
 
 <!-- ペン設定ツールバー -->
-<div class="pen-toolbar sticky-top" style="top:110px;z-index:100">
+<div class="pen-toolbar sticky-top" style="top:56px;z-index:100">
   <span class="small fw-semibold text-muted">太さ:</span>
   <button class="pen-size-btn active" data-size="2" style="width:22px;height:22px" onclick="setPenSize(2,this)">
     <span style="width:5px;height:5px;border-radius:50%;background:#333;display:block"></span>
@@ -269,6 +255,22 @@
 <div class="receipt-doc">
 
   <div class="doc-title">受　　領　　書</div>
+
+  <!-- 日付（宛名の上） -->
+  <div class="doc-row">
+    <div class="doc-label">提 出 日</div>
+    <div class="doc-input-wrap">
+      <input type="date" id="receiptDate" class="doc-text-input" value="{{ today_iso }}">
+    </div>
+  </div>
+  <div class="doc-row">
+    <div class="doc-label">対象期間</div>
+    <div class="doc-input-wrap" style="gap:8px;flex-wrap:wrap">
+      <input type="date" id="periodFrom" class="doc-text-input" style="width:auto" value="{{ today_iso }}">
+      <span class="fw-bold">〜</span>
+      <input type="date" id="periodTo" class="doc-text-input" style="width:auto" value="{{ today_iso }}">
+    </div>
+  </div>
 
   <!-- 宛名（店舗名プリセット） -->
   <div class="doc-row atena-row">
