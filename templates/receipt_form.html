@@ -206,6 +206,10 @@
   background: rgba(63,81,181,.88); z-index: 9999;
   align-items: center; justify-content: center; flex-direction: column; gap: 16px;
 }
+/* 全行の高さを統一 */
+.doc-row, .atena-row, .amount-row, .tax-fixed-row, .total-row, .sig-row,
+.issuer-row-fixed { min-height: 56px !important; height: 56px; }
+.canvas-wrap { min-height: 56px !important; height: 56px; }
 </style>
 {% endblock %}
 
@@ -213,8 +217,16 @@
 
 <!-- 日付ピッカー -->
 <div class="date-picker-bar sticky-top" style="top:56px;z-index:101">
-  <label for="receiptDate"><i class="bi bi-calendar3 me-1"></i>日付：</label>
+  <label for="receiptDate"><i class="bi bi-calendar3 me-1"></i>提出日：</label>
   <input type="date" id="receiptDate" value="{{ today_iso }}">
+</div>
+
+<!-- 業務委託の対象期間 -->
+<div class="date-picker-bar" style="max-width:680px;margin:0 auto 8px;background:#FFF3E0;border-color:#FFCC80;flex-wrap:wrap">
+  <label for="periodFrom" style="color:#E65100"><i class="bi bi-calendar-range me-1"></i>対象期間：</label>
+  <input type="date" id="periodFrom" value="{{ today_iso }}">
+  <span class="fw-bold">〜</span>
+  <input type="date" id="periodTo" value="{{ today_iso }}">
 </div>
 
 <!-- キャスト選択 -->
@@ -332,13 +344,19 @@
     <div class="doc-auto-val total-val" id="totalDisplay">―</div>
   </div>
 
-  <!-- 但し書 -->
-  <div class="doc-sec"><i class="bi bi-chat-text me-1"></i>但し書</div>
+  <!-- 名目 -->
+  <div class="doc-sec"><i class="bi bi-chat-text me-1"></i>名目</div>
 
   <div class="doc-row" style="min-height:52px">
-    <div class="doc-label">但 し 書</div>
-    <div class="doc-input-wrap">
-      <input type="text" id="inputDesc" class="doc-text-input" placeholder="例：業務委託料として">
+    <div class="doc-label">名　　目</div>
+    <div class="doc-auto-val fw-bold" style="color:#222;font-size:1.1rem">業務委託費として</div>
+  </div>
+
+  <div class="doc-row" style="min-height:80px">
+    <div class="doc-label" style="flex-direction:column;gap:2px"><div>名目</div><div style="font-size:0.7rem;font-weight:400">（手書き）</div></div>
+    <div class="canvas-wrap" style="min-height:80px">
+      <canvas id="c_meimoku"></canvas>
+      <button class="clear-btn" onclick="clearField('c_meimoku')">✕</button>
     </div>
   </div>
 

@@ -59,8 +59,9 @@ class Receipt(Base):
     tax_amount    = Column(String(32),  nullable=True)   # 消費税額
     total_amount  = Column(String(32),  nullable=True)   # 合計金額
 
-    # ── 但し書
+    # ── 名目（業務委託費）
     description   = Column(Text,        nullable=True)
+    period_text   = Column(String(64),  nullable=True)   # 業務委託の対象期間
 
     # ── 署名（Base64 PNG）
     signature_b64 = Column(Text,        nullable=True)
@@ -126,3 +127,9 @@ def init_db():
     if not DATABASE_URL:
         os.makedirs(os.path.join(BASE_DIR, "data", "pdfs"), exist_ok=True)
     Base.metadata.create_all(bind=engine)
+    # 既存DBへの列追加（period_text）
+    from sqlalchemy import inspect, text
+    cols = [c["name"] for c in inspect(engine).get_columns("receipts")]
+    if "period_text" not in cols:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE receipts ADD COLUMN period_text VARCHAR(64)"))

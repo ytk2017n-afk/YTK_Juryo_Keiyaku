@@ -90,7 +90,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     def sec(x, y, w, h, label, color=C_SEC):
         fr(x, y, w, h, color, black, 0.5)
         t(x+8, y+h/2-4, label, FB, 8, white)
-        return y - h
+        return y
 
     LBL_W = 75   # ラベル列幅
 
@@ -135,12 +135,17 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     cur = TY
 
     # ── 日付 ────────────────────────────────────────────────────────────────────
-    DH = 28
+    UH = 37   # 全行共通の高さ
+    DH = UH
     cur -= DH
-    text_row(MX, cur, CW, DH, "日　　付", data.get("date_text", ""), lf=C_LBL, vf=C_INP)
+    text_row(MX, cur, CW, DH, "提 出 日", data.get("date_text", ""), lf=C_LBL, vf=C_INP)
+
+    # ── 対象期間 ────────────────────────────────────────────────────────────────
+    cur -= DH
+    text_row(MX, cur, CW, DH, "対象期間", data.get("period_text", ""), lf=C_LBL, vf=C_INP)
 
     # ── 宛名 ────────────────────────────────────────────────────────────────────
-    AH = 44
+    AH = UH
     cur -= AH
     ALW = 55; SAMA_W = 30
     fr(MX,           cur, ALW,              AH, C_HDR, black, 1.5)
@@ -152,11 +157,11 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+CW-SAMA_W/2,cur+AH/2-7, "様", FB, 13, black, "center")
 
     SH = 12   # セクション見出し高さ
-    RH = 36   # 通常行高
+    RH = UH   # 通常行高
 
     # ── 受取人情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 受取人情報")
-    cur -= RH+4; canvas_row(MX, cur, CW, RH+4, "本　　名", "realname")
+    cur -= RH;   canvas_row(MX, cur, CW, RH, "本　　名", "realname")
     cur -= RH;   text_row(MX, cur, CW, RH, "源 氏 名", data.get("alias", ""))
     cur -= RH;   text_row(MX, cur, CW, RH, "住　　所",  data.get("address", ""))
     cur -= RH;   text_row(MX, cur, CW, RH, "電話番号",  data.get("phone",   ""))
@@ -164,7 +169,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     # ── 金額 ────────────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 金額")
 
-    RLG = 42
+    RLG = UH
     cur -= RLG
     fr(MX,        cur, LBL_W, RLG, C_LBL, black, 1.2)
     t(MX+LBL_W/2, cur+RLG/2-5, "金　　額", FB, 9, black, "center")
@@ -176,7 +181,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(vx+6, cur+RLG/2-5, data.get("amount_text", ""), FR, 11, black)
 
     # 消費税率固定
-    RS = 26
+    RS = UH
     cur -= RS
     fr(MX,       cur, LBL_W, RS, C_GRAY, black, 0.5)
     t(MX+LBL_W/2,cur+RS/2-4, "消費税率", FR, 7.5, HexColor("#555555"), "center")
@@ -200,11 +205,14 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     fr(MX+LBL_W+PREW, cur, CW-LBL_W-PREW, RLG, C_TOT_V, black, 1.5)
     t(MX+LBL_W+PREW+6, cur+RLG/2-5, data.get("total_text", ""), FB, 11, C_HDR)
 
-    # ── 但し書 ──────────────────────────────────────────────────────────────────
-    cur = sec(MX, cur-SH, CW, SH, "■ 但し書")
-    RD = 32
+    # ── 名目 ────────────────────────────────────────────────────────────────────
+    cur = sec(MX, cur-SH, CW, SH, "■ 名目")
+    RD = UH
     cur -= RD
-    text_row(MX, cur, CW, RD, "但 し 書", data.get("desc", ""))
+    text_row(MX, cur, CW, RD, "名　　目", data.get("desc", "") or "業務委託費として")
+    RM = UH
+    cur -= RM
+    canvas_row(MX, cur, CW, RM, "名目（手書き）", "meimoku")
 
     # ── 発行者情報 ──────────────────────────────────────────────────────────────
     cur = sec(MX, cur-SH, CW, SH, "■ 発行者情報", C_SEC2)
@@ -217,7 +225,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     ]
     if data.get("store_invoice_no"):
         iss_rows.append(("インボイス", "T" + data["store_invoice_no"]))
-    IRH = 22
+    IRH = UH
     for label, val in iss_rows:
         cur -= IRH
         fr(MX,         cur, LBL_W, IRH, C_LBL_S, black, 0.5)
@@ -230,7 +238,7 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
     t(MX+INFO_W+STAMP_W/2, cur+stamp_h/2-12, "押印欄", FR, 7, C_MID, "center")
 
     # ── 署名欄 ──────────────────────────────────────────────────────────────────
-    SIG_H = 44; SIG_Y = OB + 2
+    SIG_H = UH; SIG_Y = OB + 2
     sig_lw = LBL_W
     fr(MX,         SIG_Y, sig_lw,     SIG_H, C_HDR, black, 1.5)
     t(MX+sig_lw/2, SIG_Y+SIG_H/2-5,  "署　名", FB, 9, white, "center")
@@ -241,14 +249,15 @@ def generate_receipt_pdf(data: dict, out_path: str) -> str:
 
     t(MX, 10, "※ 消費税率10%は固定　／　本書は受領の証として発行します", FR, 6.5, C_NOTE)
 
-    # AcroForm 署名フィールド（reportlab ネイティブ）
-    cv.acroForm.signatureField(
-        "signature",
-        tooltip="署名欄",
-        x=SFX, y=SFY,
-        width=SFW, height=SFH,
-        forceBorder=False,
-    )
+    # AcroForm 署名フィールド（reportlab のバージョンによっては未対応のためスキップ）
+    if hasattr(cv.acroForm, "signatureField"):
+        cv.acroForm.signatureField(
+            "signature",
+            tooltip="署名欄",
+            x=SFX, y=SFY,
+            width=SFW, height=SFH,
+            forceBorder=False,
+        )
 
     cv.showPage()
     cv.save()
